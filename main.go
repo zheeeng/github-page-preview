@@ -4,15 +4,24 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"os"
 	"path"
 )
 
-const proxyTarget = "https://raw.githubusercontent.com"
+const (
+	proxyTarget = "https://raw.githubusercontent.com"
+	defaultPort = "8090"
+)
 
 func main() {
 	http.HandleFunc("/", ProxyServe)
 
-	http.ListenAndServe(":8090", nil)
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = defaultPort
+	}
+
+	http.ListenAndServe(":"+port, nil)
 }
 
 // ProxyServe starts a proxy service
