@@ -1,52 +1,40 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
 	"os"
-	"path"
 )
 
 const (
+	rootName    = "gpr"
 	proxyTarget = "https://raw.githubusercontent.com"
 	defaultPort = "8090"
 )
 
-func main() {
-	http.HandleFunc("/debug", func(rw http.ResponseWriter, req *http.Request) {
-		u, _ := url.Parse(proxyTarget)
-		fmt.Fprintf(
-			rw,
-			"Path is: %s, %s; Scheme is: %s, %s; Host is %s, %s",
-			req.URL.Path,
-			u.Path,
-			req.URL.Scheme,
-			u.Scheme,
-			req.URL.Host,
-			u.Host,
-		)
-	})
-
-	http.HandleFunc("/", ProxyServe)
-
+func getPort() string {
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = defaultPort
 	}
 
-	http.ListenAndServe(":"+port, nil)
+	return ":" + port
 }
 
-// ProxyServe starts a proxy service
-func ProxyServe(rw http.ResponseWriter, req *http.Request) {
+func main() {
+	http.HandleFunc("/", proxyServe)
+
+	http.ListenAndServe(getPort(), nil)
+}
+
+func proxyServe(res http.ResponseWriter, req *http.Request) {
 	u, _ := url.Parse(proxyTarget)
 
 	req.Header.Set("X-Forwarded-Host", req.Header.Get("Host"))
+	req.Host = u.Host
 	req.URL.Scheme = u.Scheme
 	req.URL.Host = u.Host
-	req.URL.Path = path.Join(u.Path, req.URL.Path)
 
-	httputil.NewSingleHostReverseProxy(u).ServeHTTP(rw, req)
+	httputil.NewSingleHostReverseProxy(u).ServeHTTP(res, req)
 }
