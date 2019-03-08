@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -14,6 +15,20 @@ const (
 )
 
 func main() {
+	http.HandleFunc("/debug", func(rw http.ResponseWriter, req *http.Request) {
+		u, _ := url.Parse(proxyTarget)
+		fmt.Fprintf(
+			rw,
+			"Path is: %s, %s; Scheme is: %s, %s; Host is %s, %s",
+			req.URL.Path,
+			u.Path,
+			req.URL.Scheme,
+			u.Scheme,
+			req.URL.Host,
+			u.Host,
+		)
+	})
+
 	http.HandleFunc("/", ProxyServe)
 
 	port := os.Getenv("PORT")
