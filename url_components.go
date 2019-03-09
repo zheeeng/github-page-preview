@@ -36,10 +36,14 @@ func (uc *pathComponents) parseFrom(path string) *pathComponents {
 	return uc
 }
 
-func (uc *pathComponents) compileToRawPath() string {
+func (uc *pathComponents) compileToRaw() string {
 	return fmt.Sprintf("/%s/%s/blob/%s/%s//%s", uc.user, uc.repo, uc.branch, uc.path, uc.asset)
 }
 
-func (uc *pathComponents) compileToPath() string {
+func (uc *pathComponents) compileToRequestPath() string {
 	return fmt.Sprintf("/%s/%s/%s/%s/%s", uc.user, uc.repo, uc.branch, uc.path, uc.asset)
+}
+
+func (uc *pathComponents) compileToStaticHost() string {
+	return fmt.Sprintf("/%s/%s/%s/%s", uc.user, uc.repo, uc.branch, uc.path)
 }
