@@ -2,13 +2,10 @@ package main
 
 import (
 	"net/http"
-	"net/http/httputil"
-	"net/url"
 	"os"
 )
 
 const (
-	rootName    = "gpr"
 	proxyTarget = "https://raw.githubusercontent.com"
 	defaultPort = "8090"
 )
@@ -29,12 +26,9 @@ func main() {
 }
 
 func proxyServe(res http.ResponseWriter, req *http.Request) {
-	u, _ := url.Parse(proxyTarget)
+	if req.Method != http.MethodGet {
+		http.Error(res, http.ErrBodyNotAllowed.Error(), http.StatusMethodNotAllowed)
+	}
 
-	req.Header.Set("X-Forwarded-Host", req.Header.Get("Host"))
-	req.Host = u.Host
-	req.URL.Scheme = u.Scheme
-	req.URL.Host = u.Host
-
-	httputil.NewSingleHostReverseProxy(u).ServeHTTP(res, req)
+	http.FileServer(AssetFileSystem{}).ServeHTTP(res, req)
 }
