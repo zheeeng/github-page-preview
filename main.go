@@ -4,6 +4,8 @@ import (
 	"html/template"
 	"net/http"
 	"os"
+
+	"github.com/github-page-preview/fs"
 )
 
 const defaultPort = "8090"
@@ -50,5 +52,5 @@ func proxyServe(res http.ResponseWriter, req *http.Request) {
 		referer = req.Header.Get("referer")
 	}
 
-	http.FileServer(NewAssetFileSystem(referer)).ServeHTTP(res, req)
+	http.FileServer(fs.NewAssetFileSystem(referer)).ServeHTTP(res, req)
 }

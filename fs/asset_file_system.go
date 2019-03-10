@@ -1,8 +1,10 @@
-package main
+package fs
 
 import (
 	"io/ioutil"
 	"net/http"
+
+	"github.com/github-page-preview/utils"
 )
 
 const proxyTarget = "https://raw.githubusercontent.com"
@@ -22,7 +24,7 @@ func NewAssetFileSystem(referer string) AssetFileSystem {
 }
 
 func (afs assetFileSystem) Open(name string) (AssetFile, error) {
-	pc := NewPathComponents(name, afs.referer)
+	pc := utils.NewPathComponents(name, afs.referer)
 
 	resp, err := http.Get(proxyTarget + pc.RequestPath())
 
