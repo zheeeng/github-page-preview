@@ -12,7 +12,7 @@ const proxyTarget = "https://raw.githubusercontent.com"
 // RemoteFileSystem implements http.FileServer interface
 type RemoteFileSystem interface {
 	http.FileSystem
-	ConfigureStatic(folder string) RemoteFileSystem
+	SetReferer(string) RemoteFileSystem
 }
 
 type remoteFileSystem struct {
@@ -21,15 +21,15 @@ type remoteFileSystem struct {
 }
 
 // NewRemoteFileSystem initializes RemoteFileSystem
-func NewRemoteFileSystem(referer string) RemoteFileSystem {
+func NewRemoteFileSystem(staticFolder string) RemoteFileSystem {
 	return &remoteFileSystem{
-		referer: referer,
+		staticFolder: staticFolder,
 	}
 }
 
 // ConfigureStatic set the static reading folder, when url matches seeking local files rule
-func (rfs *remoteFileSystem) ConfigureStatic(folder string) RemoteFileSystem {
-	rfs.staticFolder = folder
+func (rfs *remoteFileSystem) SetReferer(referer string) RemoteFileSystem {
+	rfs.referer = referer
 	return rfs
 }
 

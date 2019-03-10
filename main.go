@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/github-page-preview/utils"
+
 	"github.com/github-page-preview/rfs"
 )
 
@@ -19,26 +21,24 @@ func getPort() string {
 }
 
 func main() {
-	http.HandleFunc("/", serve)
+	rfsv := rfs.NewRemoteFileServe("./public")
+
+	http.HandleFunc("/", utils.HTTPHandlersCompose(
+		methodHandler,
+		utils.CompleteHandler(rfsv.Start),
+	))
 
 	http.ListenAndServe(getPort(), nil)
 }
 
-func serve(res http.ResponseWriter, req *http.Request) {
-	if req.Method != http.MethodGet {
-		http.Error(res, http.ErrBodyNotAllowed.Error(), http.StatusMethodNotAllowed)
+func methodHandler(res http.ResponseWriter, req *http.Request) utils.Cont {
+	return func(next func(), complete func(), err func()) {
+		if req.Method != http.MethodGet {
+			http.Error(res, http.ErrBodyNotAllowed.Error(), http.StatusMethodNotAllowed)
 
-		return
+			err()
+		}
+
+		next()
 	}
-
-	proxyServe(res, req)
-}
-
-func proxyServe(res http.ResponseWriter, req *http.Request) {
-	referer := req.Header.Get("Referer")
-	if referer == "" {
-		referer = req.Header.Get("referer")
-	}
-
-	http.FileServer(rfs.NewRemoteFileSystem(referer).ConfigureStatic("./public")).ServeHTTP(res, req)
 }
