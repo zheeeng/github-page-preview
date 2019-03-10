@@ -9,8 +9,8 @@ import (
 )
 
 var (
-	urlExp            = regexp.MustCompile(`/(?P<user>[\w-~]+)/(?P<repo>[\w-~]+)(/blob)?/(?P<branch>[\w-~]+)(?P<path>[\w-~/]*)//(?P<folder>[\w-~/]*?)(?P<file>(/?[^/\s]+\.[^/\s]+)?$)`)
-	urlWithoutHostExp = regexp.MustCompile(`/(?P<user>[\w-~]+)/(?P<repo>[\w-~]+)(/blob/)?(?P<branch>[\w-~]+)(?P<path>[\w-~/]*)(?P<file>(/[^/\s]+\.[^/\s]+)?$)`)
+	urlExp            = regexp.MustCompile(`/(?P<user>[\w-~]+)/(?P<repo>[\w-~]+)(/blob|/tree)?/(?P<branch>[\w-~]+)(?P<path>[\w-~/]*)//(?P<folder>[\w-~/]*?)(?P<file>(/?[^/\s]+\.[^/\s]+)?$)`)
+	urlWithoutHostExp = regexp.MustCompile(`/(?P<user>[\w-~]+)/(?P<repo>[\w-~]+)(/blob/|/tree/)?(?P<branch>[\w-~]+)(?P<path>[\w-~/]*)(?P<file>(/[^/\s]+\.[^/\s]+)?$)`)
 	fileExp           = regexp.MustCompile(`/(?P<file>.*)`)
 	// ErrNotRecognize presents url path no patterns matching
 	ErrNotRecognize = errors.New("Can't recognize the path format")
