@@ -8,17 +8,17 @@ import (
 )
 
 var (
-	urlExp            = regexp.MustCompile(`/(?P<user>[\w-~]+)/(?P<repo>[\w-~]+)/blob/(?P<branch>[\w-~]+)(?P<path>[\w-~/]*)//(?P<asset>.*)`)
-	urlWithoutHostExp = regexp.MustCompile(`/(?P<user>[\w-~]+)/(?P<repo>[\w-~]+)/blob/(?P<branch>[\w-~]+)(?P<path>[\w-~/]*)(?P<asset>(/[^/\s]+\.[^/\s]+)?$)`)
-	assetExp          = regexp.MustCompile(`/(?P<asset>.*)`)
+	urlExp            = regexp.MustCompile(`/(?P<user>[\w-~]+)/(?P<repo>[\w-~]+)/blob/(?P<branch>[\w-~]+)(?P<path>[\w-~/]*)//(?P<folder>[\w-~/]*?)(?P<file>(/?[^/\s]+\.[^/\s]+)?$)`)
+	urlWithoutHostExp = regexp.MustCompile(`/(?P<user>[\w-~]+)/(?P<repo>[\w-~]+)/blob/(?P<branch>[\w-~]+)(?P<path>[\w-~/]*)(?P<file>(/[^/\s]+\.[^/\s]+)?$)`)
+	fileExp           = regexp.MustCompile(`/(?P<file>.*)`)
 )
 
 // PathComponents interface
 type PathComponents interface {
 	RequestPath() string
 	StaticHost() string
-	setAsset(string)
-	getAsset() string
+	setFile(string)
+	getFile() string
 }
 
 type pathComponents struct {
@@ -26,7 +26,8 @@ type pathComponents struct {
 	repo   string
 	branch string
 	path   string
-	asset  string
+	folder string
+	file   string
 }
 
 // NewPathComponents returns pathComponents instance
@@ -34,26 +35,29 @@ func NewPathComponents(path string, referer string) PathComponents {
 	pathBytes := []byte(path)
 
 	switch true {
+	// Situation 1: host is specified by delimiter '//'
 	case urlExp.Match(pathBytes):
 		return (&pathComponents{}).parseFrom(path, urlExp)
+	// Situation 2: host are detected by default rule
 	case urlWithoutHostExp.Match(pathBytes):
 		return (&pathComponents{}).parseFrom(path, urlWithoutHostExp)
-	case assetExp.Match(pathBytes) && referer != "":
-		pc := (&pathComponents{}).parseFrom(path, assetExp)
+		// Situation 3: path is relative path to root, we get host by referer
+	case fileExp.Match(pathBytes) && referer != "":
+		pc := (&pathComponents{}).parseFrom(path, fileExp)
 		refPc := NewPathComponents(referer, "")
-		refPc.setAsset(pc.getAsset())
+		refPc.setFile(pc.getFile())
 		return refPc
 	}
 
 	panic("Can't recognize the path format")
 }
 
-func (uc *pathComponents) setAsset(asset string) {
-	uc.asset = asset
+func (uc *pathComponents) setFile(file string) {
+	uc.file = file
 }
 
-func (uc *pathComponents) getAsset() string {
-	return uc.asset
+func (uc *pathComponents) getFile() string {
+	return uc.file
 }
 
 func (uc *pathComponents) parseFrom(path string, reg *regexp.Regexp) *pathComponents {
@@ -72,15 +76,23 @@ func (uc *pathComponents) parseFrom(path string, reg *regexp.Regexp) *pathCompon
 			if strings.HasSuffix(uc.path, "/") {
 				uc.path = uc.path[0 : len(uc.path)-1]
 			}
-		case "asset":
-			uc.asset = match[i]
-			if !strings.HasPrefix(uc.asset, "/") {
-				uc.asset = "/" + uc.asset
+		case "folder":
+			uc.folder = match[i]
+			if uc.folder != "" {
+				uc.folder = "/" + uc.folder
 			}
-			if strings.HasSuffix(uc.asset, "/") {
-				uc.asset += "index.html"
-			} else if filepath.Ext(uc.asset) == "" {
-				uc.asset += "/index.html"
+			if strings.HasSuffix(uc.folder, "/") {
+				uc.folder = uc.folder[0 : len(uc.folder)-1]
+			}
+		case "file":
+			uc.file = match[i]
+			if !strings.HasPrefix(uc.file, "/") {
+				uc.file = "/" + uc.file
+			}
+			if strings.HasSuffix(uc.file, "/") {
+				uc.file += "index.html"
+			} else if filepath.Ext(uc.file) == "" {
+				uc.file += "/index.html"
 			}
 		}
 	}
@@ -89,7 +101,7 @@ func (uc *pathComponents) parseFrom(path string, reg *regexp.Regexp) *pathCompon
 }
 
 func (uc *pathComponents) RequestPath() string {
-	return fmt.Sprintf("/%s/%s/%s%s%s", uc.user, uc.repo, uc.branch, uc.path, uc.asset)
+	return fmt.Sprintf("/%s/%s/%s%s%s%s", uc.user, uc.repo, uc.branch, uc.path, uc.folder, uc.file)
 }
 
 func (uc *pathComponents) StaticHost() string {
