@@ -221,7 +221,9 @@ func TestParse(t *testing.T) {
 
 		if err != test.err {
 			t.Errorf("%s[ErrorTrigger]: got %v, want %v", descr, err, test.err)
+		}
 
+		if err != nil {
 			continue
 		}
 
