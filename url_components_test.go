@@ -7,57 +7,111 @@ import (
 
 func TestParse(t *testing.T) {
 	var tests = []struct {
-		testName string
-		testPath string
-		path     string
-		host     string
+		testName    string
+		testPath    string
+		testReferer string
+		path        string
+		host        string
 	}{
 		{
 			"regular",
-			"/zheeeng/exportfromjson/blob/master/example//index.html",
-			"/zheeeng/exportfromjson/master/example/index.html",
-			"/zheeeng/exportfromjson/master/example",
+			"/user/repo/blob/master/example//index.html",
+			"",
+			"/user/repo/master/example/index.html",
+			"/user/repo/master/example",
 		},
 		{
 			"with special char symbols",
-			"/zheeeng/export-from-json/blob/master/example//index.html",
-			"/zheeeng/export-from-json/master/example/index.html",
-			"/zheeeng/export-from-json/master/example",
+			"/user/repo-name/blob/master/example//index.html",
+			"",
+			"/user/repo-name/master/example/index.html",
+			"/user/repo-name/master/example",
 		},
 		{
-			"with special char symbols2",
-			"/zheeeng/@roundation/blob/master/example//index.html",
-			"/zheeeng/@roundation/master/example/index.html",
-			"/zheeeng/@roundation/master/example",
+			"muti chunks path",
+			"/user/repo/blob/master/example/sub/path//index.html",
+			"",
+			"/user/repo/master/example/sub/path/index.html",
+			"/user/repo/master/example/sub/path",
 		},
 		{
-			"long path",
-			"/zheeeng/test/blob/master/example/sub/path//index.html",
-			"/zheeeng/test/master/example/sub/path/index.html",
-			"/zheeeng/test/master/example/sub/path",
+			"no path",
+			"/user/repo/blob/master//",
+			"",
+			"/user/repo/master/index.html",
+			"/user/repo/master",
+		},
+		{
+			"no asset",
+			"/user/repo/blob/master/example/sub/path//",
+			"",
+			"/user/repo/master/example/sub/path/index.html",
+			"/user/repo/master/example/sub/path",
+		},
+		{
+			"no file",
+			"/user/repo/blob/master//example",
+			"",
+			"/user/repo/master/example/index.html",
+			"/user/repo/master",
+		},
+		{
+			"no file - 2",
+			"/user/repo/blob/master//example/",
+			"",
+			"/user/repo/master/example/index.html",
+			"/user/repo/master",
+		},
+		{
+			"multi chunks asset",
+			"/user/repo/blob/master/example//sub/path/index.html",
+			"",
+			"/user/repo/master/example/sub/path/index.html",
+			"/user/repo/master/example",
+		},
+		{
+			"no host",
+			"/user/repo/blob/master/example/sub/path/index.html",
+			"",
+			"/user/repo/master/example/sub/path/index.html",
+			"/user/repo/master/example/sub/path",
+		},
+		{
+			"no host, no path",
+			"/user/repo/blob/master/index.html",
+			"",
+			"/user/repo/master/index.html",
+			"/user/repo/master",
+		},
+		{
+			"no host, no file",
+			"/user/repo/blob/master/example/sub/path",
+			"",
+			"/user/repo/master/example/sub/path/index.html",
+			"/user/repo/master/example/sub/path",
+		},
+		{
+			"no host, no file - 2",
+			"/user/repo/blob/master/example/sub/path/",
+			"",
+			"/user/repo/master/example/sub/path/index.html",
+			"/user/repo/master/example/sub/path",
 		},
 	}
 
 	for _, test := range tests {
-		descr := fmt.Sprintf("\nTest %s failed:\n", test.testName)
+		descr := fmt.Sprintf("\nTest [%s] failed:\n", test.testName)
 
-		pc := pathComponents{}
+		pc := NewPathComponents(test.testPath, test.testReferer)
 
-		pc.parseFrom(test.testPath)
-
-		rawPath := pc.compileToRaw()
-		if rawPath != test.testPath {
-			t.Errorf("%s[compile to raw]: got %s, want %s", descr, rawPath, test.testPath)
-		}
-
-		path := pc.compileToRequestPath()
+		path := pc.RequestPath()
 		if path != test.path {
-			t.Errorf("%s[compile to request path]: got %s, want %s", descr, path, test.path)
+			t.Errorf("%s[RequestPath]: got %s, want %s", descr, path, test.path)
 		}
 
-		host := pc.compileToStaticHost()
+		host := pc.StaticHost()
 		if host != test.host {
-			t.Errorf("%s[compile to request host]: got %s, want %s", descr, host, test.host)
+			t.Errorf("%s[StaticHost]: got %s, want %s", descr, host, test.host)
 		}
 	}
 }
