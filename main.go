@@ -40,5 +40,5 @@ func proxyServe(res http.ResponseWriter, req *http.Request) {
 		referer = req.Header.Get("referer")
 	}
 
-	http.FileServer(rfs.NewRemoteFileSystem(referer)).ServeHTTP(res, req)
+	http.FileServer(rfs.NewRemoteFileSystem(referer).ConfigureStatic("./public")).ServeHTTP(res, req)
 }
