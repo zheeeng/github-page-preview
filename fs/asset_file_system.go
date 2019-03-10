@@ -24,7 +24,14 @@ func NewAssetFileSystem(referer string) AssetFileSystem {
 }
 
 func (afs assetFileSystem) Open(name string) (AssetFile, error) {
-	pc := utils.NewPathComponents(name, afs.referer)
+	pc, err := utils.NewPathComponents(name, afs.referer)
+
+	if err == utils.ErrNotRecognize {
+		dir := http.Dir(name)
+		return dir.Open(name)
+	} else if err != nil {
+		return nil, err
+	}
 
 	resp, err := http.Get(proxyTarget + pc.RequestPath())
 

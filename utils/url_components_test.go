@@ -12,6 +12,7 @@ func TestParse(t *testing.T) {
 		testReferer string
 		path        string
 		host        string
+		err         error
 	}{
 		{
 			"regular",
@@ -19,6 +20,7 @@ func TestParse(t *testing.T) {
 			"",
 			"/user/repo/master/example/sub/path/index.html",
 			"/user/repo/master/example",
+			nil,
 		},
 		{
 			"path is relative path to host; referer is regular",
@@ -26,6 +28,7 @@ func TestParse(t *testing.T) {
 			"/user/repo/blob/master/example//sub/path/index.html",
 			"/user/repo/master/example/sub/path/asset.css",
 			"/user/repo/master/example",
+			nil,
 		},
 		{
 			"no folder",
@@ -33,6 +36,7 @@ func TestParse(t *testing.T) {
 			"",
 			"/user/repo/master/example/index.html",
 			"/user/repo/master/example",
+			nil,
 		},
 		{
 			"path is relative path to host; referer without folder",
@@ -40,6 +44,7 @@ func TestParse(t *testing.T) {
 			"/user/repo/blob/master/example//index.html",
 			"/user/repo/master/example/asset.css",
 			"/user/repo/master/example",
+			nil,
 		},
 
 		{
@@ -48,6 +53,7 @@ func TestParse(t *testing.T) {
 			"",
 			"/user/repo-name/master/example/index.html",
 			"/user/repo-name/master/example",
+			nil,
 		},
 		{
 			"path is relative path to host; referer with special char symbols",
@@ -55,6 +61,7 @@ func TestParse(t *testing.T) {
 			"/user/repo-name/blob/master/example//index.html",
 			"/user/repo-name/master/example/asset.css",
 			"/user/repo-name/master/example",
+			nil,
 		},
 
 		{
@@ -63,6 +70,7 @@ func TestParse(t *testing.T) {
 			"",
 			"/user/repo/master/example/sub/path/index.html",
 			"/user/repo/master/example/sub/path",
+			nil,
 		},
 		{
 			"path is relative path to host; referer with muti chunks path",
@@ -70,6 +78,7 @@ func TestParse(t *testing.T) {
 			"/user/repo/blob/master/example/sub/path//index.html",
 			"/user/repo/master/example/sub/path/asset.css",
 			"/user/repo/master/example/sub/path",
+			nil,
 		},
 
 		{
@@ -78,6 +87,7 @@ func TestParse(t *testing.T) {
 			"",
 			"/user/repo/master/index.html",
 			"/user/repo/master",
+			nil,
 		},
 		{
 			"path is relative path to host; referer without folder",
@@ -85,6 +95,7 @@ func TestParse(t *testing.T) {
 			"/user/repo/blob/master//",
 			"/user/repo/master/asset.css",
 			"/user/repo/master",
+			nil,
 		},
 
 		{
@@ -93,6 +104,7 @@ func TestParse(t *testing.T) {
 			"",
 			"/user/repo/master/example/sub/path/index.html",
 			"/user/repo/master/example",
+			nil,
 		},
 		{
 			"path is relative path to host; referer without file",
@@ -100,6 +112,7 @@ func TestParse(t *testing.T) {
 			"/user/repo/blob/master/example//sub/path",
 			"/user/repo/master/example/sub/path/asset.css",
 			"/user/repo/master/example",
+			nil,
 		},
 		{
 			"no file2",
@@ -107,6 +120,7 @@ func TestParse(t *testing.T) {
 			"",
 			"/user/repo/master/example/sub/path/index.html",
 			"/user/repo/master/example",
+			nil,
 		},
 		{
 			"path is relative path to host; referer without file",
@@ -114,6 +128,7 @@ func TestParse(t *testing.T) {
 			"/user/repo/blob/master/example//sub/path/",
 			"/user/repo/master/example/sub/path/asset.css",
 			"/user/repo/master/example",
+			nil,
 		},
 
 		// specifications fro no hosts URL
@@ -123,6 +138,7 @@ func TestParse(t *testing.T) {
 			"",
 			"/user/repo/master/example/sub/path/index.html",
 			"/user/repo/master/example/sub/path",
+			nil,
 		},
 		{
 			"path is relative path to host; referer without host",
@@ -130,6 +146,7 @@ func TestParse(t *testing.T) {
 			"/user/repo/blob/master/example/sub/path/index.html",
 			"/user/repo/master/example/sub/path/asset.css",
 			"/user/repo/master/example/sub/path",
+			nil,
 		},
 
 		{
@@ -138,6 +155,7 @@ func TestParse(t *testing.T) {
 			"",
 			"/user/repo/master/index.html",
 			"/user/repo/master",
+			nil,
 		},
 		{
 			"path is relative path to host; referer without host and path",
@@ -145,6 +163,7 @@ func TestParse(t *testing.T) {
 			"/user/repo/blob/master/index.html",
 			"/user/repo/master/asset.css",
 			"/user/repo/master",
+			nil,
 		},
 
 		{
@@ -153,6 +172,7 @@ func TestParse(t *testing.T) {
 			"",
 			"/user/repo/master/example/sub/path/index.html",
 			"/user/repo/master/example/sub/path",
+			nil,
 		},
 		{
 			"path is relative path to host; referer without host and file",
@@ -160,6 +180,7 @@ func TestParse(t *testing.T) {
 			"/user/repo/blob/master/example/sub/path",
 			"/user/repo/master/example/sub/path/asset.css",
 			"/user/repo/master/example/sub/path",
+			nil,
 		},
 
 		{
@@ -168,6 +189,7 @@ func TestParse(t *testing.T) {
 			"",
 			"/user/repo/master/example/sub/path/index.html",
 			"/user/repo/master/example/sub/path",
+			nil,
 		},
 		{
 			"path is relative path to host; referer without host and file - 2",
@@ -175,13 +197,33 @@ func TestParse(t *testing.T) {
 			"/user/repo/blob/master/example/sub/path/",
 			"/user/repo/master/example/sub/path/asset.css",
 			"/user/repo/master/example/sub/path",
+			nil,
+		},
+		{
+			"path is relative path to host; referer without host and file - 2",
+			"/asset.css",
+			"/user/repo/blob/master/example/sub/path/",
+			"/user/repo/master/example/sub/path/asset.css",
+			"/user/repo/master/example/sub/path",
+			nil,
+		},
+		{
+			testName: "local file triggers error",
+			testPath: "/favicon.ico",
+			err:      ErrNotRecognize,
 		},
 	}
 
 	for _, test := range tests {
 		descr := fmt.Sprintf("\nTest [%s] failed:\n", test.testName)
 
-		pc := NewPathComponents(test.testPath, test.testReferer)
+		pc, err := NewPathComponents(test.testPath, test.testReferer)
+
+		if err != test.err {
+			t.Errorf("%s[ErrorTrigger]: got %v, want %v", descr, err, test.err)
+
+			continue
+		}
 
 		path := pc.RequestPath()
 		if path != test.path {

@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"errors"
 	"fmt"
 	"path/filepath"
 	"regexp"
@@ -11,6 +12,8 @@ var (
 	urlExp            = regexp.MustCompile(`/(?P<user>[\w-~]+)/(?P<repo>[\w-~]+)/blob/(?P<branch>[\w-~]+)(?P<path>[\w-~/]*)//(?P<folder>[\w-~/]*?)(?P<file>(/?[^/\s]+\.[^/\s]+)?$)`)
 	urlWithoutHostExp = regexp.MustCompile(`/(?P<user>[\w-~]+)/(?P<repo>[\w-~]+)/blob/(?P<branch>[\w-~]+)(?P<path>[\w-~/]*)(?P<file>(/[^/\s]+\.[^/\s]+)?$)`)
 	fileExp           = regexp.MustCompile(`/(?P<file>.*)`)
+	// ErrNotRecognize presents url path no patterns matching
+	ErrNotRecognize = errors.New("Can't recognize the path format")
 )
 
 // PathComponents interface
@@ -31,25 +34,25 @@ type pathComponents struct {
 }
 
 // NewPathComponents returns pathComponents instance
-func NewPathComponents(path string, referer string) PathComponents {
+func NewPathComponents(path string, referer string) (PathComponents, error) {
 	pathBytes := []byte(path)
 
 	switch true {
 	// Situation 1: host is specified by delimiter '//'
 	case urlExp.Match(pathBytes):
-		return (&pathComponents{}).parseFrom(path, urlExp)
+		return (&pathComponents{}).parseFrom(path, urlExp), nil
 	// Situation 2: host are detected by default rule
 	case urlWithoutHostExp.Match(pathBytes):
-		return (&pathComponents{}).parseFrom(path, urlWithoutHostExp)
+		return (&pathComponents{}).parseFrom(path, urlWithoutHostExp), nil
 		// Situation 3: path is relative path to root, we get host by referer
 	case fileExp.Match(pathBytes) && referer != "":
 		pc := (&pathComponents{}).parseFrom(path, fileExp)
-		refPc := NewPathComponents(referer, "")
+		refPc, err := NewPathComponents(referer, "")
 		refPc.setFile(pc.GetFile())
-		return refPc
+		return refPc, err
 	}
 
-	panic("Can't recognize the path format")
+	return nil, ErrNotRecognize
 }
 
 func (uc *pathComponents) setFile(file string) {
