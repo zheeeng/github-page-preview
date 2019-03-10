@@ -1,28 +1,46 @@
 package main
 
-import "os"
+import (
+	"net/http"
+	"os"
+)
 
-// AssetFile pass
-type AssetFile struct {
-	at     int64
-	name   string
-	data   []byte
-	length int64
+// AssetFile alias to http.File interface
+type AssetFile = http.File
+
+type assetFile struct {
+	at       int64
+	name     string
+	data     []byte
+	length   int64
+	fileInfo AssetFileInfo
+}
+
+// NewAssetFile initializes AssetFile
+func NewAssetFile(name string, data []byte) AssetFile {
+	dataLength := int64(len(data))
+	return &assetFile{
+		at:       0,
+		name:     name,
+		data:     data,
+		length:   dataLength,
+		fileInfo: NewAssetFileInfo(name, dataLength),
+	}
 }
 
 // Close pass
-func (af *AssetFile) Close() error { return nil }
+func (af *assetFile) Close() error { return nil }
 
 // Stat pass
-func (af *AssetFile) Stat() (os.FileInfo, error) { return &AssetFileInfo{af}, nil }
+func (af *assetFile) Stat() (os.FileInfo, error) { return af.fileInfo, nil }
 
 // Readdir pass
-func (af *AssetFile) Readdir(count int) ([]os.FileInfo, error) {
+func (af *assetFile) Readdir(count int) ([]os.FileInfo, error) {
 	return []os.FileInfo{}, nil
 }
 
 // Read pass
-func (af *AssetFile) Read(b []byte) (int, error) {
+func (af *assetFile) Read(b []byte) (int, error) {
 	i := 0
 	for af.at < af.length && i < len(b) {
 		b[i] = af.data[af.at]
@@ -33,7 +51,7 @@ func (af *AssetFile) Read(b []byte) (int, error) {
 }
 
 // Seek pass
-func (af *AssetFile) Seek(offset int64, whence int) (int64, error) {
+func (af *assetFile) Seek(offset int64, whence int) (int64, error) {
 	switch whence {
 	case 0:
 		af.at = offset

@@ -3,19 +3,28 @@ package main
 import (
 	"io/ioutil"
 	"net/http"
-	"path/filepath"
 )
 
-// AssetFileSystem implements http.FileServer
-type AssetFileSystem struct{}
+const proxyTarget = "https://raw.githubusercontent.com"
 
-// Open pass
-func (afs AssetFileSystem) Open(name string) (http.File, error) {
-	if filepath.Ext(name) == "" {
-		name += "/index.html"
+// AssetFileSystem alias to http.FileServer interface
+type AssetFileSystem = http.FileSystem
+
+type assetFileSystem struct {
+	referer string
+}
+
+// NewAssetFileSystem initializes AssetFileSystem
+func NewAssetFileSystem(referer string) AssetFileSystem {
+	return &assetFileSystem{
+		referer: referer,
 	}
+}
 
-	resp, err := http.Get(proxyTarget + name)
+func (afs assetFileSystem) Open(name string) (AssetFile, error) {
+	pc := NewPathComponents(name, afs.referer)
+
+	resp, err := http.Get(proxyTarget + pc.RequestPath())
 
 	if err != nil {
 		return nil, err
@@ -28,12 +37,5 @@ func (afs AssetFileSystem) Open(name string) (http.File, error) {
 		return nil, err
 	}
 
-	af := AssetFile{
-		at:     0,
-		name:   name,
-		data:   data,
-		length: int64(len(data)),
-	}
-
-	return &af, nil
+	return NewAssetFile(pc.GetFile(), data), nil
 }

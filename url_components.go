@@ -18,7 +18,7 @@ type PathComponents interface {
 	RequestPath() string
 	StaticHost() string
 	setFile(string)
-	getFile() string
+	GetFile() string
 }
 
 type pathComponents struct {
@@ -45,7 +45,7 @@ func NewPathComponents(path string, referer string) PathComponents {
 	case fileExp.Match(pathBytes) && referer != "":
 		pc := (&pathComponents{}).parseFrom(path, fileExp)
 		refPc := NewPathComponents(referer, "")
-		refPc.setFile(pc.getFile())
+		refPc.setFile(pc.GetFile())
 		return refPc
 	}
 
@@ -56,7 +56,7 @@ func (uc *pathComponents) setFile(file string) {
 	uc.file = file
 }
 
-func (uc *pathComponents) getFile() string {
+func (uc *pathComponents) GetFile() string {
 	return uc.file
 }
 

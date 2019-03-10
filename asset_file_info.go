@@ -5,25 +5,37 @@ import (
 	"time"
 )
 
-// AssetFileInfo pass
-type AssetFileInfo struct {
-	*AssetFile
+// AssetFileInfo alias to os.FileInfo
+type AssetFileInfo = os.FileInfo
+
+// assetFileInfo pass
+type assetFileInfo struct {
+	name   string
+	length int64
+}
+
+// NewAssetFileInfo initializes AssetFileInfo
+func NewAssetFileInfo(name string, length int64) AssetFileInfo {
+	return &assetFileInfo{
+		name:   name,
+		length: length,
+	}
 }
 
 // Name pass
-func (s *AssetFileInfo) Name() string { return s.name }
+func (s *assetFileInfo) Name() string { return s.name }
 
 // Size pass
-func (s *AssetFileInfo) Size() int64 { return s.length }
+func (s *assetFileInfo) Size() int64 { return s.length }
 
 // Mode pass
-func (s *AssetFileInfo) Mode() os.FileMode { return os.ModeTemporary }
+func (s *assetFileInfo) Mode() os.FileMode { return os.ModeTemporary }
 
 // ModTime pass
-func (s *AssetFileInfo) ModTime() time.Time { return time.Time{} }
+func (s *assetFileInfo) ModTime() time.Time { return time.Time{} }
 
 // IsDir pass
-func (s *AssetFileInfo) IsDir() bool { return false }
+func (s *assetFileInfo) IsDir() bool { return false }
 
 // Sys pass
-func (s *AssetFileInfo) Sys() interface{} { return nil }
+func (s *assetFileInfo) Sys() interface{} { return nil }

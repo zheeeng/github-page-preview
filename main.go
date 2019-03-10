@@ -1,14 +1,12 @@
 package main
 
 import (
+	"html/template"
 	"net/http"
 	"os"
 )
 
-const (
-	proxyTarget = "https://raw.githubusercontent.com"
-	defaultPort = "8090"
-)
+const defaultPort = "8090"
 
 func getPort() string {
 	port := os.Getenv("PORT")
@@ -20,15 +18,37 @@ func getPort() string {
 }
 
 func main() {
-	http.HandleFunc("/", proxyServe)
+	http.HandleFunc("/", serve)
 
 	http.ListenAndServe(getPort(), nil)
 }
 
-func proxyServe(res http.ResponseWriter, req *http.Request) {
+func serve(res http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodGet {
 		http.Error(res, http.ErrBodyNotAllowed.Error(), http.StatusMethodNotAllowed)
+
+		return
 	}
 
-	http.FileServer(AssetFileSystem{}).ServeHTTP(res, req)
+	if req.URL.Path == "/" {
+		welcomeserve(res, req)
+
+		return
+	}
+
+	proxyServe(res, req)
+}
+
+func welcomeserve(res http.ResponseWriter, req *http.Request) {
+	tmpl := template.Must(template.ParseFiles("index.html"))
+	tmpl.Execute(res, nil)
+}
+
+func proxyServe(res http.ResponseWriter, req *http.Request) {
+	referer := req.Header.Get("Referer")
+	if referer == "" {
+		referer = req.Header.Get("referer")
+	}
+
+	http.FileServer(NewAssetFileSystem(referer)).ServeHTTP(res, req)
 }
