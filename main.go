@@ -1,11 +1,10 @@
 package main
 
 import (
-	"html/template"
 	"net/http"
 	"os"
 
-	"github.com/github-page-preview/fs"
+	"github.com/github-page-preview/rfs"
 )
 
 const defaultPort = "8090"
@@ -32,18 +31,7 @@ func serve(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if req.URL.Path == "/" {
-		welcomeserve(res, req)
-
-		return
-	}
-
 	proxyServe(res, req)
-}
-
-func welcomeserve(res http.ResponseWriter, req *http.Request) {
-	tmpl := template.Must(template.ParseFiles("public/index.html"))
-	tmpl.Execute(res, nil)
 }
 
 func proxyServe(res http.ResponseWriter, req *http.Request) {
@@ -52,5 +40,5 @@ func proxyServe(res http.ResponseWriter, req *http.Request) {
 		referer = req.Header.Get("referer")
 	}
 
-	http.FileServer(fs.NewAssetFileSystem(referer)).ServeHTTP(res, req)
+	http.FileServer(rfs.NewRemoteFileSystem(referer)).ServeHTTP(res, req)
 }
