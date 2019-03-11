@@ -1,6 +1,7 @@
 package rfs
 
 import (
+	"errors"
 	"io/ioutil"
 	"net/http"
 
@@ -51,15 +52,21 @@ func (rfs *remoteFileSystem) Open(endpoint string) (RemoteFile, error) {
 
 	if err == utils.ErrNotMatchURLPattern {
 		dir := http.Dir(rfs.staticFolder)
+		// index page alias to `/`
+		if endpoint == "/" && rfs.referer == "" {
+			endpoint = "/index.html"
+		}
 		return dir.Open(endpoint)
-	} else if err != nil {
-		return nil, err
+	}
+
+	if err != nil {
+		return nil, errors.New("not found")
 	}
 
 	resp, err := http.Get(proxyTarget + pc.Endpoint())
 
 	if err != nil {
-		return nil, err
+		return nil, errors.New("not found")
 	}
 
 	data, err := ioutil.ReadAll(resp.Body)

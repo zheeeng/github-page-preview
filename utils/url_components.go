@@ -37,6 +37,7 @@ type pathComponents struct {
 // NewPathComponents returns pathComponents instance
 func NewPathComponents(path string, referer string) (PathComponents, error) {
 	pathBytes := []byte(path)
+	refererBytes := []byte(referer)
 
 	switch true {
 	// Situation 1: host is specified by delimiter '//'
@@ -45,8 +46,8 @@ func NewPathComponents(path string, referer string) (PathComponents, error) {
 	// Situation 2: host are detected by default rule
 	case urlWithoutHostExp.Match(pathBytes):
 		return (&pathComponents{}).parseFrom(path, urlWithoutHostExp), nil
-		// Situation 3: path is relative path to root, we get host by referer
-	case fileExp.Match(pathBytes) && referer != "":
+	// Situation 3: path is relative path to root, we get host by referer
+	case fileExp.Match(pathBytes) && !fileExp.Match(refererBytes) && referer != "":
 		pc := (&pathComponents{}).parseFrom(path, fileExp)
 		refPc, err := NewPathComponents(referer, "")
 		refPc.setFile(pc.GetFile())

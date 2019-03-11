@@ -19,9 +19,9 @@ const (
 // from regex to string
 var (
 	indexFrom       = regexp.MustCompile(indexPattern)
-	indexTo         = base64.URLEncoding.EncodeToString([]byte(indexPattern))
+	indexTo         = "/" + base64.URLEncoding.EncodeToString([]byte(indexPattern))
 	suffixSlashFrom = regexp.MustCompile(suffixSlashPattern)
-	suffixSlashTo   = base64.URLEncoding.EncodeToString([]byte(suffixSlashPattern))
+	suffixSlashTo   = "/" + base64.URLEncoding.EncodeToString([]byte(suffixSlashPattern))
 	delimiterFrom   = regexp.MustCompile(delimiterPattern)
 	delimiterTo     = base64.URLEncoding.EncodeToString([]byte(delimiterPattern))
 )
@@ -47,11 +47,7 @@ func delimiterRestore(i string) (o string) {
 
 // PreventRedirection hijacks endpoint, preventing 301 redirection by http.FileServer
 func PreventRedirection(req *http.Request) {
-	hijacked := req.URL.Path
-	hijacked = indexReplace(hijacked)
-	hijacked = suffixSlashReplace(hijacked)
-	hijacked = delimiterReplace(hijacked)
-	req.URL.Path = hijacked
+	req.URL.Path = delimiterReplace(suffixSlashReplace(indexReplace(req.URL.Path)))
 }
 
 // RestoreHijacked restores the hijacked endpoint string before consuming

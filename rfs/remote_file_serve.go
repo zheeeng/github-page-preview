@@ -2,6 +2,7 @@ package rfs
 
 import (
 	"net/http"
+	"net/url"
 
 	"github.com/github-page-preview/utils"
 )
@@ -30,9 +31,10 @@ func (rfsv *remoteFileServe) Start(res http.ResponseWriter, req *http.Request) {
 	if referer == "" {
 		referer = req.Header.Get("referer")
 	}
+	URL, _ := url.Parse(referer)
 
 	// Provide the request context in time
-	rfsv.remoteFileSystem.SetReferer(referer)
+	rfsv.remoteFileSystem.SetReferer(URL.Path)
 
 	// Prevent the default redirection behavior caused by http.FileServer
 	utils.PreventRedirection(req)
