@@ -1,6 +1,11 @@
 package utils_test
 
-import "github.com/github-page-preview/utils"
+import (
+	"fmt"
+	"testing"
+
+	"github.com/github-page-preview/utils"
+)
 
 type structForURLComponentsFunctionality struct {
 	testName    string
@@ -236,17 +241,27 @@ var testsForURLComponentsFunctionality = []structForURLComponentsFunctionality{
 	},
 }
 
+func TestInputCases(t *testing.T) {
+	for _, test := range testsForURLComponentsFunctionality {
+		descr := fmt.Sprintf("\nTest [%s] failed:\n", test.testName)
+
+		if !utils.ExportedBaseExp.Match([]byte(test.testPath)) && !utils.ExportedBaseExp.Match([]byte(test.testReferer)) && test.err == nil {
+			t.Errorf("You provided invalid test case in [%s]: got testPath `%s` and testReferer `%s`", descr, test.testPath, test.testReferer)
+		}
+	}
+}
+
 type structForPrevent301RedirectionFunctionality struct {
 	testName string
 	testPath string
 }
 
 var testsForPrevent301RedirectionFunctionality = func() (tests []structForPrevent301RedirectionFunctionality) {
-	for _, t := range testsForURLComponentsFunctionality {
-		if t.testReferer != "" {
+	for _, test := range testsForURLComponentsFunctionality {
+		if test.testReferer != "" {
 			tests = append(tests, structForPrevent301RedirectionFunctionality{
-				testName: t.testName,
-				testPath: t.testPath,
+				testName: test.testName,
+				testPath: test.testPath,
 			})
 		}
 	}
