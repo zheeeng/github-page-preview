@@ -13,11 +13,13 @@ const proxyTarget = "https://raw.githubusercontent.com"
 type RemoteFileSystem interface {
 	http.FileSystem
 	SetReferer(string) RemoteFileSystem
+	SetPathTransformer(pathTransformer func(string) string) RemoteFileSystem
 }
 
 type remoteFileSystem struct {
-	referer      string
-	staticFolder string
+	referer         string
+	staticFolder    string
+	pathTransformer func(string) string
 }
 
 // NewRemoteFileSystem initializes RemoteFileSystem
@@ -27,20 +29,29 @@ func NewRemoteFileSystem(staticFolder string) RemoteFileSystem {
 	}
 }
 
+// SetPathTransformer set the path transformer,
+// which will be called before consuming the request path.
+func (rfs *remoteFileSystem) SetPathTransformer(pathTransformer func(string) string) RemoteFileSystem {
+	rfs.pathTransformer = pathTransformer
+	return rfs
+}
+
 // ConfigureStatic set the static reading folder, when url matches seeking local files rule
 func (rfs *remoteFileSystem) SetReferer(referer string) RemoteFileSystem {
 	rfs.referer = referer
 	return rfs
 }
 
-func (rfs *remoteFileSystem) Open(name string) (RemoteFile, error) {
-	name = utils.RestoreHijacked(name)
+func (rfs *remoteFileSystem) Open(path string) (RemoteFile, error) {
+	if rfs.pathTransformer != nil {
+		path = rfs.pathTransformer(path)
+	}
 
-	pc, err := utils.NewPathComponents(name, rfs.referer)
+	pc, err := utils.NewPathComponents(path, rfs.referer)
 
-	if err == utils.ErrNotRecognize {
+	if err == utils.ErrNotMatchURLPattern {
 		dir := http.Dir(rfs.staticFolder)
-		return dir.Open(name)
+		return dir.Open(path)
 	} else if err != nil {
 		return nil, err
 	}

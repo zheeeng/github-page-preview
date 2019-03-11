@@ -237,7 +237,7 @@ var testsForURLComponentsFunctionality = []structForURLComponentsFunctionality{
 	{
 		testName: "local file triggers error",
 		testPath: "/favicon.ico",
-		err:      utils.ErrNotRecognize,
+		err:      utils.ErrNotMatchURLPattern,
 	},
 }
 

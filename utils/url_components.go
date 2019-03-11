@@ -13,8 +13,8 @@ var (
 	urlExp            = regexp.MustCompile(`^/(?P<user>[\w-~]+)/(?P<repo>[\w-~]+)(/blob|/tree)?/(?P<branch>[\w-~]+)(?P<path>[\w-~/]*)//(?P<folder>[\w-~/]*?)(?P<file>(/?[^/\s]+\.[^/\s]+)?$)`)
 	urlWithoutHostExp = regexp.MustCompile(`^/(?P<user>[\w-~]+)/(?P<repo>[\w-~]+)(/blob|/tree)?/(?P<branch>[\w-~]+)(?P<path>[\w-~/]*)(?P<file>(/[^/\s]+\.[^/\s]+)?$)`)
 	fileExp           = regexp.MustCompile(`^/(?P<file>.*)`)
-	// ErrNotRecognize presents url path no patterns matching
-	ErrNotRecognize = errors.New("Can't recognize the path format")
+	// ErrNotMatchURLPattern presents url path no patterns matching
+	ErrNotMatchURLPattern = errors.New("Can't recognize the path format")
 )
 
 // PathComponents interface
@@ -53,7 +53,7 @@ func NewPathComponents(path string, referer string) (PathComponents, error) {
 		return refPc, err
 	}
 
-	return nil, ErrNotRecognize
+	return nil, ErrNotMatchURLPattern
 }
 
 func (uc *pathComponents) setFile(file string) {
