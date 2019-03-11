@@ -2,6 +2,8 @@ package rfs
 
 import (
 	"net/http"
+
+	"github.com/github-page-preview/utils"
 )
 
 // RemoteFileServe provides Start func
@@ -27,6 +29,9 @@ func (rfsv *remoteFileServe) Start(res http.ResponseWriter, req *http.Request) {
 	}
 
 	rfsv.remoteFileSystem.SetReferer(referer)
+
+	// Prevent the default redirection behavior caused by http.FileServer
+	utils.PreventRedirection(req)
 
 	http.FileServer(rfsv.remoteFileSystem).ServeHTTP(res, req)
 }

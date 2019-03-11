@@ -34,6 +34,8 @@ func (rfs *remoteFileSystem) SetReferer(referer string) RemoteFileSystem {
 }
 
 func (rfs *remoteFileSystem) Open(name string) (RemoteFile, error) {
+	name = utils.RestoreHijacked(name)
+
 	pc, err := utils.NewPathComponents(name, rfs.referer)
 
 	if err == utils.ErrNotRecognize {
