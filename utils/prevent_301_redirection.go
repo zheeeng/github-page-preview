@@ -4,15 +4,16 @@ import (
 	"encoding/base64"
 	"net/http"
 	"regexp"
+	"strings"
 )
 
 const (
 	indexStr           = "/index.html"
 	indexPattern       = `/index\.html$`
 	suffixSlashStr     = "/"
-	suffixSlashPattern = "(?:[^/])(/)$"
+	suffixSlashPattern = "/$"
 	delimiterStr       = "//"
-	delimiterPattern   = `(?:[^/])(//)(?:[^/]+)$`
+	delimiterPattern   = `([^/])(//)([^/]+)$`
 )
 
 // from regex to string
@@ -26,29 +27,22 @@ var (
 )
 
 func indexReplace(i string) (o string) {
-	o = i
-	return
+	return string(indexFrom.ReplaceAll([]byte(i), []byte(indexTo)))
 }
 func indexRestore(i string) (o string) {
-	o = i
-	return
+	return strings.Replace(i, indexTo, indexStr, -1)
 }
 func suffixSlashReplace(i string) (o string) {
-	o = i
-	return
+	return string(suffixSlashFrom.ReplaceAll([]byte(i), []byte(suffixSlashTo)))
 }
 func suffixSlashRestore(i string) (o string) {
-	o = i
-	return
+	return strings.Replace(i, suffixSlashTo, suffixSlashStr, -1)
 }
-
 func delimiterReplace(i string) (o string) {
-	o = i
-	return
+	return string(delimiterFrom.ReplaceAll([]byte(i), []byte("$1"+delimiterTo+"$3")))
 }
 func delimiterRestore(i string) (o string) {
-	o = i
-	return
+	return strings.Replace(i, delimiterTo, delimiterStr, -1)
 }
 
 // PreventRedirection hijacks http request path, preventing 301 redirection by http.FileServer
