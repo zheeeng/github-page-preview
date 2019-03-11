@@ -8,12 +8,12 @@ import (
 )
 
 type structForURLComponentsFunctionality struct {
-	testName    string
-	testPath    string
-	testReferer string
-	path        string
-	host        string
-	err         error
+	testName     string
+	testEndpoint string
+	testReferer  string
+	endpoint     string
+	host         string
+	err          error
 }
 
 var testsForURLComponentsFunctionality = []structForURLComponentsFunctionality{
@@ -26,7 +26,7 @@ var testsForURLComponentsFunctionality = []structForURLComponentsFunctionality{
 		nil,
 	},
 	{
-		"path is relative path to host; referer is regular",
+		"endpoint is relative to host; referer is regular",
 		"/asset.css",
 		"/user/repo/blob/master/example//sub/path/index.html",
 		"/user/repo/master/example/sub/path/asset.css",
@@ -34,7 +34,7 @@ var testsForURLComponentsFunctionality = []structForURLComponentsFunctionality{
 		nil,
 	},
 	{
-		"no 'blob' in path",
+		"no 'blob/tree' in endpoint",
 		"/user/repo/master/example//sub/path/index.html",
 		"",
 		"/user/repo/master/example/sub/path/index.html",
@@ -42,7 +42,7 @@ var testsForURLComponentsFunctionality = []structForURLComponentsFunctionality{
 		nil,
 	},
 	{
-		"no 'blob' in referer path",
+		"no 'blob/tree' in referer",
 		"/asset.css",
 		"/user/repo/master/example//sub/path/index.html",
 		"/user/repo/master/example/sub/path/asset.css",
@@ -50,7 +50,7 @@ var testsForURLComponentsFunctionality = []structForURLComponentsFunctionality{
 		nil,
 	},
 	{
-		"'tree' in path",
+		"'tree' in endpoint",
 		"/user/repo/tree/master/example//sub/path/index.html",
 		"",
 		"/user/repo/master/example/sub/path/index.html",
@@ -74,7 +74,7 @@ var testsForURLComponentsFunctionality = []structForURLComponentsFunctionality{
 		nil,
 	},
 	{
-		"path is relative path to host; referer without folder",
+		"endpoint is relative to host; referer without folder",
 		"/asset.css",
 		"/user/repo/blob/master/example//index.html",
 		"/user/repo/master/example/asset.css",
@@ -91,7 +91,7 @@ var testsForURLComponentsFunctionality = []structForURLComponentsFunctionality{
 		nil,
 	},
 	{
-		"path is relative path to host; referer with special char symbols",
+		"endpoint is relative to host; referer with special char symbols",
 		"/asset.css",
 		"/user/repo-name/blob/master/example//index.html",
 		"/user/repo-name/master/example/asset.css",
@@ -100,7 +100,7 @@ var testsForURLComponentsFunctionality = []structForURLComponentsFunctionality{
 	},
 
 	{
-		"muti chunks path",
+		"muti chunks",
 		"/user/repo/blob/master/example/sub/path//index.html",
 		"",
 		"/user/repo/master/example/sub/path/index.html",
@@ -108,7 +108,7 @@ var testsForURLComponentsFunctionality = []structForURLComponentsFunctionality{
 		nil,
 	},
 	{
-		"path is relative path to host; referer with muti chunks path",
+		"endpoint is relative to host; referer with muti chunks",
 		"/asset.css",
 		"/user/repo/blob/master/example/sub/path//index.html",
 		"/user/repo/master/example/sub/path/asset.css",
@@ -125,7 +125,7 @@ var testsForURLComponentsFunctionality = []structForURLComponentsFunctionality{
 		nil,
 	},
 	{
-		"path is relative path to host; referer without folder",
+		"endpoint is relative to host; referer without folder",
 		"/asset.css",
 		"/user/repo/blob/master//",
 		"/user/repo/master/asset.css",
@@ -142,7 +142,7 @@ var testsForURLComponentsFunctionality = []structForURLComponentsFunctionality{
 		nil,
 	},
 	{
-		"path is relative path to host; referer without file",
+		"endpoint is relative to host; referer without file",
 		"/asset.css",
 		"/user/repo/blob/master/example//sub/path",
 		"/user/repo/master/example/sub/path/asset.css",
@@ -158,7 +158,7 @@ var testsForURLComponentsFunctionality = []structForURLComponentsFunctionality{
 		nil,
 	},
 	{
-		"path is relative path to host; referer without file",
+		"endpoint is relative to host; referer without file",
 		"/asset.css",
 		"/user/repo/blob/master/example//sub/path/",
 		"/user/repo/master/example/sub/path/asset.css",
@@ -176,7 +176,7 @@ var testsForURLComponentsFunctionality = []structForURLComponentsFunctionality{
 		nil,
 	},
 	{
-		"path is relative path to host; referer without host",
+		"endpoint is relative to host; referer without host",
 		"/asset.css",
 		"/user/repo/blob/master/example/sub/path/index.html",
 		"/user/repo/master/example/sub/path/asset.css",
@@ -193,7 +193,7 @@ var testsForURLComponentsFunctionality = []structForURLComponentsFunctionality{
 		nil,
 	},
 	{
-		"path is relative path to host; referer without host and path",
+		"endpoint is relative to host; referer without host and path",
 		"/asset.css",
 		"/user/repo/blob/master/index.html",
 		"/user/repo/master/asset.css",
@@ -210,7 +210,7 @@ var testsForURLComponentsFunctionality = []structForURLComponentsFunctionality{
 		nil,
 	},
 	{
-		"path is relative path to host; referer without host and file",
+		"endpoint is relative to host; referer without host and file",
 		"/asset.css",
 		"/user/repo/blob/master/example/sub/path",
 		"/user/repo/master/example/sub/path/asset.css",
@@ -227,7 +227,7 @@ var testsForURLComponentsFunctionality = []structForURLComponentsFunctionality{
 		nil,
 	},
 	{
-		"path is relative path to host; referer without host and file - 2",
+		"endpoint is relative to host; referer without host and file - 2",
 		"/asset.css",
 		"/user/repo/blob/master/example/sub/path/",
 		"/user/repo/master/example/sub/path/asset.css",
@@ -235,9 +235,9 @@ var testsForURLComponentsFunctionality = []structForURLComponentsFunctionality{
 		nil,
 	},
 	{
-		testName: "local file triggers error",
-		testPath: "/favicon.ico",
-		err:      utils.ErrNotMatchURLPattern,
+		testName:     "local file triggers error",
+		testEndpoint: "/favicon.ico",
+		err:          utils.ErrNotMatchURLPattern,
 	},
 }
 
@@ -245,15 +245,15 @@ func TestInputCases(t *testing.T) {
 	for _, test := range testsForURLComponentsFunctionality {
 		descr := fmt.Sprintf("\nTest [%s] failed:\n", test.testName)
 
-		if !utils.ExportedBaseExp.Match([]byte(test.testPath)) && !utils.ExportedBaseExp.Match([]byte(test.testReferer)) && test.err == nil {
-			t.Errorf("You provided invalid test case in [%s]: got testPath `%s` and testReferer `%s`", descr, test.testPath, test.testReferer)
+		if !utils.ExportedBaseExp.Match([]byte(test.testEndpoint)) && !utils.ExportedBaseExp.Match([]byte(test.testReferer)) && test.err == nil {
+			t.Errorf("You provided invalid test case in [%s]: got testEndpoint `%s` and testReferer `%s`", descr, test.testEndpoint, test.testReferer)
 		}
 	}
 }
 
 type structForPrevent301RedirectionFunctionality struct {
-	testName string
-	testPath string
+	testName     string
+	testEndpoint string
 }
 
 var testsForPrevent301RedirectionFunctionality = func() (tests []structForPrevent301RedirectionFunctionality) {
@@ -261,8 +261,8 @@ var testsForPrevent301RedirectionFunctionality = func() (tests []structForPreven
 		// We chose no referer cases
 		if test.testReferer == "" && test.err == nil {
 			tests = append(tests, structForPrevent301RedirectionFunctionality{
-				testName: test.testName,
-				testPath: test.testPath,
+				testName:     test.testName,
+				testEndpoint: test.testEndpoint,
 			})
 		}
 	}

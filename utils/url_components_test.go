@@ -11,7 +11,7 @@ func TestParse(t *testing.T) {
 	for _, test := range testsForURLComponentsFunctionality {
 		descr := fmt.Sprintf("\nTest [%s] failed:\n", test.testName)
 
-		pc, err := utils.NewPathComponents(test.testPath, test.testReferer)
+		pc, err := utils.NewPathComponents(test.testEndpoint, test.testReferer)
 
 		if err != test.err {
 			t.Errorf("%s[ErrorTrigger]: got %v, want %v", descr, err, test.err)
@@ -21,9 +21,9 @@ func TestParse(t *testing.T) {
 			continue
 		}
 
-		path := pc.RequestPath()
-		if path != test.path {
-			t.Errorf("%s[RequestPath]: got %s, want %s", descr, path, test.path)
+		endpoint := pc.Endpoint()
+		if endpoint != test.endpoint {
+			t.Errorf("%s[Endpoint]: got %s, want %s", descr, endpoint, test.endpoint)
 		}
 
 		host := pc.StaticHost()

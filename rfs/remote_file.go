@@ -2,14 +2,13 @@ package rfs
 
 import (
 	"net/http"
-	"os"
 )
 
 // RemoteFile alias to http.File interface
 type RemoteFile = http.File
 
 type remoteFile struct {
-	at       int64
+	cursor   int64
 	name     string
 	data     []byte
 	length   int64
@@ -20,7 +19,7 @@ type remoteFile struct {
 func NewRemoteFile(name string, data []byte) RemoteFile {
 	dataLength := int64(len(data))
 	return &remoteFile{
-		at:       0,
+		cursor:   0,
 		name:     name,
 		data:     data,
 		length:   dataLength,
@@ -32,20 +31,20 @@ func NewRemoteFile(name string, data []byte) RemoteFile {
 func (rf *remoteFile) Close() error { return nil }
 
 // Stat pass
-func (rf *remoteFile) Stat() (os.FileInfo, error) { return rf.fileInfo, nil }
+func (rf *remoteFile) Stat() (RemoteFileInfo, error) { return rf.fileInfo, nil }
 
 // Readdir pass
-func (rf *remoteFile) Readdir(count int) ([]os.FileInfo, error) {
-	return []os.FileInfo{}, nil
+func (rf *remoteFile) Readdir(count int) ([]RemoteFileInfo, error) {
+	return []RemoteFileInfo{}, nil
 }
 
 // Read pass
 func (rf *remoteFile) Read(b []byte) (int, error) {
 	i := 0
-	for rf.at < rf.length && i < len(b) {
-		b[i] = rf.data[rf.at]
+	for rf.cursor < rf.length && i < len(b) {
+		b[i] = rf.data[rf.cursor]
 		i++
-		rf.at++
+		rf.cursor++
 	}
 	return i, nil
 }
@@ -54,11 +53,11 @@ func (rf *remoteFile) Read(b []byte) (int, error) {
 func (rf *remoteFile) Seek(offset int64, whence int) (int64, error) {
 	switch whence {
 	case 0:
-		rf.at = offset
+		rf.cursor = offset
 	case 1:
-		rf.at += offset
+		rf.cursor += offset
 	case 2:
-		rf.at = rf.length + offset
+		rf.cursor = rf.length + offset
 	}
-	return rf.at, nil
+	return rf.cursor, nil
 }

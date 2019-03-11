@@ -19,7 +19,7 @@ var (
 
 // PathComponents interface
 type PathComponents interface {
-	RequestPath() string
+	Endpoint() string
 	StaticHost() string
 	setFile(string)
 	GetFile() string
@@ -104,7 +104,7 @@ func (uc *pathComponents) parseFrom(path string, reg *regexp.Regexp) *pathCompon
 	return uc
 }
 
-func (uc *pathComponents) RequestPath() string {
+func (uc *pathComponents) Endpoint() string {
 	return fmt.Sprintf("/%s/%s/%s%s%s%s", uc.user, uc.repo, uc.branch, uc.path, uc.folder, uc.file)
 }
 

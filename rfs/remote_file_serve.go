@@ -18,10 +18,10 @@ type remoteFileServe struct {
 // NewRemoteFileServe initializes RemoteFileServe
 func NewRemoteFileServe(staticFolder string) RemoteFileServe {
 	return &remoteFileServe{
-		// Note: Here we setted a path transformer, it will be called before consuming path,
-		// therefore we must call a reverse-direction transformer before feeding path to consumer.
+		// Note: Here we setted a endpoint transformer, it will be called before consuming endpoint,
+		// therefore we must call a reverse-direction transformer before feeding endpoint to consumer.
 		// Look into Start func below, we called `utils.PreventRedirection(req)` for doing it.
-		remoteFileSystem: NewRemoteFileSystem(staticFolder).SetPathTransformer(utils.RestoreHijacked),
+		remoteFileSystem: NewRemoteFileSystem(staticFolder).SetEndpointTransformer(utils.RestoreHijacked),
 	}
 }
 

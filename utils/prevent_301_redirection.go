@@ -45,7 +45,7 @@ func delimiterRestore(i string) (o string) {
 	return strings.Replace(i, delimiterTo, delimiterStr, -1)
 }
 
-// PreventRedirection hijacks http request path, preventing 301 redirection by http.FileServer
+// PreventRedirection hijacks endpoint, preventing 301 redirection by http.FileServer
 func PreventRedirection(req *http.Request) {
 	hijacked := req.URL.Path
 	hijacked = indexReplace(hijacked)
@@ -54,7 +54,7 @@ func PreventRedirection(req *http.Request) {
 	req.URL.Path = hijacked
 }
 
-// RestoreHijacked restores the hijacked path string before using http request
+// RestoreHijacked restores the hijacked endpoint string before consuming
 func RestoreHijacked(hijacked string) string {
 	return indexRestore(suffixSlashRestore(delimiterRestore(hijacked)))
 }

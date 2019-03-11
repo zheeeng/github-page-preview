@@ -16,7 +16,7 @@ func TestConvertions(t *testing.T) {
 
 		r := http.Request{
 			URL: &url.URL{
-				Path: test.testPath,
+				Path: test.testEndpoint,
 			},
 		}
 
@@ -40,10 +40,10 @@ func TestConvertions(t *testing.T) {
 			t.Errorf("%s[Strip double-slash delimiter]: got %s", descr, h)
 		}
 
-		path := utils.RestoreHijacked(r.URL.Path)
+		endpoint := utils.RestoreHijacked(r.URL.Path)
 
-		if path != test.testPath {
-			t.Errorf("%s[Convert and restore]: got %v, want %v", descr, path, test.testPath)
+		if endpoint != test.testEndpoint {
+			t.Errorf("%s[Convert and restore]: got %v, want %v", descr, endpoint, test.testEndpoint)
 		}
 	}
 }

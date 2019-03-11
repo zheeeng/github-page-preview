@@ -13,13 +13,13 @@ const proxyTarget = "https://raw.githubusercontent.com"
 type RemoteFileSystem interface {
 	http.FileSystem
 	SetReferer(string) RemoteFileSystem
-	SetPathTransformer(pathTransformer func(string) string) RemoteFileSystem
+	SetEndpointTransformer(endpointTransformer func(string) string) RemoteFileSystem
 }
 
 type remoteFileSystem struct {
-	referer         string
-	staticFolder    string
-	pathTransformer func(string) string
+	referer             string
+	staticFolder        string
+	endpointTransformer func(string) string
 }
 
 // NewRemoteFileSystem initializes RemoteFileSystem
@@ -29,10 +29,10 @@ func NewRemoteFileSystem(staticFolder string) RemoteFileSystem {
 	}
 }
 
-// SetPathTransformer set the path transformer,
-// which will be called before consuming the request path.
-func (rfs *remoteFileSystem) SetPathTransformer(pathTransformer func(string) string) RemoteFileSystem {
-	rfs.pathTransformer = pathTransformer
+// SetEndpointTransformer set the endpoint transformer,
+// which will be called before consuming the request endpoint.
+func (rfs *remoteFileSystem) SetEndpointTransformer(endpointTransformer func(string) string) RemoteFileSystem {
+	rfs.endpointTransformer = endpointTransformer
 	return rfs
 }
 
@@ -42,21 +42,21 @@ func (rfs *remoteFileSystem) SetReferer(referer string) RemoteFileSystem {
 	return rfs
 }
 
-func (rfs *remoteFileSystem) Open(path string) (RemoteFile, error) {
-	if rfs.pathTransformer != nil {
-		path = rfs.pathTransformer(path)
+func (rfs *remoteFileSystem) Open(endpoint string) (RemoteFile, error) {
+	if rfs.endpointTransformer != nil {
+		endpoint = rfs.endpointTransformer(endpoint)
 	}
 
-	pc, err := utils.NewPathComponents(path, rfs.referer)
+	pc, err := utils.NewPathComponents(endpoint, rfs.referer)
 
 	if err == utils.ErrNotMatchURLPattern {
 		dir := http.Dir(rfs.staticFolder)
-		return dir.Open(path)
+		return dir.Open(endpoint)
 	} else if err != nil {
 		return nil, err
 	}
 
-	resp, err := http.Get(proxyTarget + pc.RequestPath())
+	resp, err := http.Get(proxyTarget + pc.Endpoint())
 
 	if err != nil {
 		return nil, err
