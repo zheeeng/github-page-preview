@@ -15,6 +15,7 @@ const (
 	delimiterPattern   = `(?:[^/])(//)(?:[^/]+)$`
 )
 
+// from regex to string
 var (
 	indexFrom       = regexp.MustCompile(indexPattern)
 	indexTo         = base64.URLEncoding.EncodeToString([]byte(indexPattern))

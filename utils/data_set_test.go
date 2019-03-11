@@ -258,7 +258,8 @@ type structForPrevent301RedirectionFunctionality struct {
 
 var testsForPrevent301RedirectionFunctionality = func() (tests []structForPrevent301RedirectionFunctionality) {
 	for _, test := range testsForURLComponentsFunctionality {
-		if test.testReferer != "" {
+		// We chose no referer cases
+		if test.testReferer == "" && test.err == nil {
 			tests = append(tests, structForPrevent301RedirectionFunctionality{
 				testName: test.testName,
 				testPath: test.testPath,
