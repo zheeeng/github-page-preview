@@ -27,11 +27,11 @@ var testsForURLComponentsFunctionality = []structForURLComponentsFunctionality{
 	},
 	{
 		"endpoint is relative to host; referer is regular",
-		"/asset.css",
+		"/favicon.ico",
 		"/user/repo/blob/master/example//sub/path/index.html",
-		"/user/repo/master/example/sub/path/asset.css",
+		"/user/repo/master/example/sub/path/favicon.ico",
 		"/user/repo/master/example",
-		nil,
+		utils.ErrNotMatchURLPattern,
 	},
 	{
 		"no 'blob/tree' in endpoint",
@@ -43,11 +43,11 @@ var testsForURLComponentsFunctionality = []structForURLComponentsFunctionality{
 	},
 	{
 		"no 'blob/tree' in referer",
-		"/asset.css",
+		"/favicon.ico",
 		"/user/repo/master/example//sub/path/index.html",
-		"/user/repo/master/example/sub/path/asset.css",
+		"/user/repo/master/example/sub/path/favicon.ico",
 		"/user/repo/master/example",
-		nil,
+		utils.ErrNotMatchURLPattern,
 	},
 	{
 		"'tree' in endpoint",
@@ -59,11 +59,11 @@ var testsForURLComponentsFunctionality = []structForURLComponentsFunctionality{
 	},
 	{
 		"'tree' in referer",
-		"/asset.css",
+		"/favicon.ico",
 		"/user/repo/tree/master/example//sub/path/index.html",
-		"/user/repo/master/example/sub/path/asset.css",
+		"/user/repo/master/example/sub/path/favicon.ico",
 		"/user/repo/master/example",
-		nil,
+		utils.ErrNotMatchURLPattern,
 	},
 	{
 		"no folder",
@@ -75,11 +75,11 @@ var testsForURLComponentsFunctionality = []structForURLComponentsFunctionality{
 	},
 	{
 		"endpoint is relative to host; referer without folder",
-		"/asset.css",
+		"/favicon.ico",
 		"/user/repo/blob/master/example//index.html",
-		"/user/repo/master/example/asset.css",
+		"/user/repo/master/example/favicon.ico",
 		"/user/repo/master/example",
-		nil,
+		utils.ErrNotMatchURLPattern,
 	},
 
 	{
@@ -92,11 +92,11 @@ var testsForURLComponentsFunctionality = []structForURLComponentsFunctionality{
 	},
 	{
 		"endpoint is relative to host; referer with special char symbols",
-		"/asset.css",
+		"/favicon.ico",
 		"/user/repo-name/blob/master/example//index.html",
-		"/user/repo-name/master/example/asset.css",
+		"/user/repo-name/master/example/favicon.ico",
 		"/user/repo-name/master/example",
-		nil,
+		utils.ErrNotMatchURLPattern,
 	},
 
 	{
@@ -109,11 +109,11 @@ var testsForURLComponentsFunctionality = []structForURLComponentsFunctionality{
 	},
 	{
 		"endpoint is relative to host; referer with muti chunks",
-		"/asset.css",
+		"/favicon.ico",
 		"/user/repo/blob/master/example/sub/path//index.html",
-		"/user/repo/master/example/sub/path/asset.css",
+		"/user/repo/master/example/sub/path/favicon.ico",
 		"/user/repo/master/example/sub/path",
-		nil,
+		utils.ErrNotMatchURLPattern,
 	},
 
 	{
@@ -126,11 +126,11 @@ var testsForURLComponentsFunctionality = []structForURLComponentsFunctionality{
 	},
 	{
 		"endpoint is relative to host; referer without folder",
-		"/asset.css",
+		"/favicon.ico",
 		"/user/repo/blob/master//",
-		"/user/repo/master/asset.css",
+		"/user/repo/master/favicon.ico",
 		"/user/repo/master",
-		nil,
+		utils.ErrNotMatchURLPattern,
 	},
 
 	{
@@ -143,11 +143,11 @@ var testsForURLComponentsFunctionality = []structForURLComponentsFunctionality{
 	},
 	{
 		"endpoint is relative to host; referer without file",
-		"/asset.css",
+		"/favicon.ico",
 		"/user/repo/blob/master/example//sub/path",
-		"/user/repo/master/example/sub/path/asset.css",
+		"/user/repo/master/example/sub/path/favicon.ico",
 		"/user/repo/master/example",
-		nil,
+		utils.ErrNotMatchURLPattern,
 	},
 	{
 		"no file2",
@@ -159,16 +159,16 @@ var testsForURLComponentsFunctionality = []structForURLComponentsFunctionality{
 	},
 	{
 		"endpoint is relative to host; referer without file",
-		"/asset.css",
+		"/favicon.ico",
 		"/user/repo/blob/master/example//sub/path/",
-		"/user/repo/master/example/sub/path/asset.css",
+		"/user/repo/master/example/sub/path/favicon.ico",
 		"/user/repo/master/example",
-		nil,
+		utils.ErrNotMatchURLPattern,
 	},
 
-	// specifications fro no hosts URL
+	// specifications fro no specified hosts URL
 	{
-		"no host",
+		"no specified host",
 		"/user/repo/blob/master/example/sub/path/index.html",
 		"",
 		"/user/repo/master/example/sub/path/index.html",
@@ -176,16 +176,16 @@ var testsForURLComponentsFunctionality = []structForURLComponentsFunctionality{
 		nil,
 	},
 	{
-		"endpoint is relative to host; referer without host",
-		"/asset.css",
+		"endpoint is relative to host; referer without specified host",
+		"/favicon.ico",
 		"/user/repo/blob/master/example/sub/path/index.html",
-		"/user/repo/master/example/sub/path/asset.css",
+		"/user/repo/master/example/sub/path/favicon.ico",
 		"/user/repo/master/example/sub/path",
-		nil,
+		utils.ErrNotMatchURLPattern,
 	},
 
 	{
-		"no host, no path",
+		"no specified host, no path",
 		"/user/repo/blob/master/index.html",
 		"",
 		"/user/repo/master/index.html",
@@ -194,15 +194,15 @@ var testsForURLComponentsFunctionality = []structForURLComponentsFunctionality{
 	},
 	{
 		"endpoint is relative to host; referer without host and path",
-		"/asset.css",
+		"/favicon.ico",
 		"/user/repo/blob/master/index.html",
-		"/user/repo/master/asset.css",
+		"/user/repo/master/favicon.ico",
 		"/user/repo/master",
-		nil,
+		utils.ErrNotMatchURLPattern,
 	},
 
 	{
-		"no host, no file",
+		"no specified host, no file",
 		"/user/repo/blob/master/example/sub/path",
 		"",
 		"/user/repo/master/example/sub/path/index.html",
@@ -210,16 +210,16 @@ var testsForURLComponentsFunctionality = []structForURLComponentsFunctionality{
 		nil,
 	},
 	{
-		"endpoint is relative to host; referer without host and file",
-		"/asset.css",
+		"endpoint is relative to host; referer without specified host and file",
+		"/favicon.ico",
 		"/user/repo/blob/master/example/sub/path",
-		"/user/repo/master/example/sub/path/asset.css",
+		"/user/repo/master/example/sub/path/favicon.ico",
 		"/user/repo/master/example/sub/path",
-		nil,
+		utils.ErrNotMatchURLPattern,
 	},
 
 	{
-		"no host, no file - 2",
+		"no specified host, no file - 2",
 		"/user/repo/blob/master/example/sub/path/",
 		"",
 		"/user/repo/master/example/sub/path/index.html",
@@ -227,12 +227,12 @@ var testsForURLComponentsFunctionality = []structForURLComponentsFunctionality{
 		nil,
 	},
 	{
-		"endpoint is relative to host; referer without host and file - 2",
-		"/asset.css",
+		"endpoint is relative to host; referer without specified host and file - 2",
+		"/favicon.ico",
 		"/user/repo/blob/master/example/sub/path/",
-		"/user/repo/master/example/sub/path/asset.css",
+		"/user/repo/master/example/sub/path/favicon.ico",
 		"/user/repo/master/example/sub/path",
-		nil,
+		utils.ErrNotMatchURLPattern,
 	},
 	{
 		testName:     "local file triggers error",

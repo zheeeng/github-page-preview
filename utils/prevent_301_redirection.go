@@ -23,7 +23,7 @@ var (
 	suffixSlashFrom = regexp.MustCompile(suffixSlashPattern)
 	suffixSlashTo   = "/" + base64.URLEncoding.EncodeToString([]byte(suffixSlashPattern))
 	delimiterFrom   = regexp.MustCompile(delimiterPattern)
-	delimiterTo     = base64.URLEncoding.EncodeToString([]byte(delimiterPattern))
+	delimiterTo     = "/" + base64.URLEncoding.EncodeToString([]byte(delimiterPattern))
 )
 
 func indexReplace(i string) (o string) {
