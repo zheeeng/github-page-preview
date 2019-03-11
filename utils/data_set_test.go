@@ -235,8 +235,25 @@ var testsForURLComponentsFunctionality = []structForURLComponentsFunctionality{
 		utils.ErrNotMatchURLPattern,
 	},
 	{
-		testName:     "local file triggers error",
+		testName:     "local root page triggers error",
+		testEndpoint: "/",
+		err:          utils.ErrNotMatchURLPattern,
+	},
+	{
+		testName:     "local index page triggers error",
+		testEndpoint: "/index.html",
+		err:          utils.ErrNotMatchURLPattern,
+	},
+	{
+		testName:     "local asset, referer is root page",
 		testEndpoint: "/favicon.ico",
+		testReferer:  "/",
+		err:          utils.ErrNotMatchURLPattern,
+	},
+	{
+		testName:     "local asset, referer is index page",
+		testEndpoint: "/favicon.ico",
+		testReferer:  "/index.html",
 		err:          utils.ErrNotMatchURLPattern,
 	},
 }
