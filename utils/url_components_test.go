@@ -232,14 +232,6 @@ func TestParse(t *testing.T) {
 			nil,
 		},
 		{
-			"path is relative path to host; referer without host and file - 2",
-			"/asset.css",
-			"/user/repo/blob/master/example/sub/path/",
-			"/user/repo/master/example/sub/path/asset.css",
-			"/user/repo/master/example/sub/path",
-			nil,
-		},
-		{
 			testName: "local file triggers error",
 			testPath: "/favicon.ico",
 			err:      ErrNotRecognize,
