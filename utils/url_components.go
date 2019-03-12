@@ -17,7 +17,7 @@ const (
 
 var (
 	baseExp           = regexp.MustCompile(`^/[\w-~]+/[\w-~]+(/blob|/tree)?/[\w-~]+`)
-	urlExp            = regexp.MustCompile(`^/(?P<user>[\w-~]+)/(?P<repo>[\w-~]+)(/blob|/tree)?/(?P<branch>[\w-~]+)(?P<path>[\w-~/]*)//(?P<folder>[\w-~/]*?)(?P<file>(/?[^/\s]+\.[^/\s]+)?$)`)
+	urlExp            = regexp.MustCompile(`^/(?P<user>[\w-~]+)/(?P<repo>[\w-~]+)(/blob|/tree)?/(?P<branch>[\w-~]+)(?P<path>[\w-~/]*)::/(?P<folder>[\w-~/]*?)(?P<file>(/?[^/\s]+\.[^/\s]+)?$)`)
 	urlWithoutHostExp = regexp.MustCompile(`^/(?P<user>[\w-~]+)/(?P<repo>[\w-~]+)(/blob|/tree)?/(?P<branch>[\w-~]+)(?P<path>[\w-~/]*)(?P<file>(/[^/\s]+\.[^/\s]+)?$)`)
 	rootExp           = regexp.MustCompile(`^/$`)
 	fileExp           = regexp.MustCompile(`^/(?P<file>.*)`)
@@ -32,11 +32,12 @@ var (
 type PathComponents interface {
 	Endpoint() string
 	StaticHost() string
-	GetFile() string
+	GetName() string
 }
 
 type endpointComponents struct {
 	matchType int
+	isFolder  bool
 	user      string
 	repo      string
 	branch    string
@@ -84,15 +85,34 @@ func NewEndpointComponents(path string, referer string) (PathComponents, error) 
 		return NewEndpointComponents(path, "")
 	}
 
-	return refEC.setFile(pathEC.GetFile()), nil
+	if pathEC.matchType == matchFilePattern {
+		return refEC.setFolder(pathEC.getFolder()).setFile(pathEC.getFile()), nil
+	}
+
+	if pathEC.matchType == matchURLPattern && !refEC.isFolder {
+		return refEC.setFolder(pathEC.getFolder()).setFile(pathEC.getFile()), nil
+	}
+
+	return refEC.setFile(pathEC.getFile()), nil
 }
 
 func (uc *endpointComponents) setFile(file string) *endpointComponents {
 	uc.file = file
 	return uc
 }
+func (uc *endpointComponents) getFile() string {
+	return uc.file
+}
+func (uc *endpointComponents) setFolder(folder string) *endpointComponents {
+	uc.folder = folder
+	return uc
+}
 
-func (uc *endpointComponents) GetFile() string {
+func (uc *endpointComponents) getFolder() string {
+	return uc.folder
+}
+
+func (uc *endpointComponents) GetName() string {
 	return uc.file
 }
 
@@ -122,6 +142,9 @@ func (uc *endpointComponents) parseFrom(path string, reg *regexp.Regexp) *endpoi
 			}
 		case "file":
 			uc.file = match[i]
+			if uc.file == "" {
+				uc.isFolder = true
+			}
 			if !strings.HasPrefix(uc.file, "/") {
 				uc.file = "/" + uc.file
 			}

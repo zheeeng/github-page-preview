@@ -76,5 +76,5 @@ func (rfs *remoteFileSystem) Open(endpoint string) (RemoteFile, error) {
 		return nil, err
 	}
 
-	return NewRemoteFile(ec.GetFile(), data), nil
+	return NewRemoteFile(ec.GetName(), data), nil
 }

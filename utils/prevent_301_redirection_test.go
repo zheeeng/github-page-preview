@@ -37,7 +37,7 @@ func TestConvertions(t *testing.T) {
 		}
 
 		if matched, _ := regexp.Match(utils.ExportedDelimiterPattern, []byte(h)); matched {
-			t.Errorf("%s[Strip double-slash delimiter]: got `%s`", descr, h)
+			t.Errorf("%s[Strip delimiter]: got `%s`", descr, h)
 		}
 
 		endpoint := utils.RestoreHijacked(r.URL.Path)

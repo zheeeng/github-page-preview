@@ -11,9 +11,9 @@ const (
 	indexStr           = "/index.html"
 	indexPattern       = `/index\.html$`
 	suffixSlashStr     = "/"
-	suffixSlashPattern = "/$"
-	delimiterStr       = "//"
-	delimiterPattern   = `([^/])(//)([^/]+)$`
+	suffixSlashPattern = "/+$"
+	delimiterStr       = "::/"
+	delimiterPattern   = `(::/)(.+)$`
 )
 
 // from regex to string
@@ -39,7 +39,7 @@ func suffixSlashRestore(i string) (o string) {
 	return strings.Replace(i, suffixSlashTo, suffixSlashStr, -1)
 }
 func delimiterReplace(i string) (o string) {
-	return string(delimiterFrom.ReplaceAll([]byte(i), []byte("$1"+delimiterTo+"$3")))
+	return string(delimiterFrom.ReplaceAll([]byte(i), []byte(delimiterTo+"$2")))
 }
 func delimiterRestore(i string) (o string) {
 	return strings.Replace(i, delimiterTo, delimiterStr, -1)

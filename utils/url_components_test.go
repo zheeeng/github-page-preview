@@ -14,7 +14,10 @@ func TestParse(t *testing.T) {
 		ec, err := utils.NewEndpointComponents(test.testEndpoint, test.testReferer)
 
 		if err != test.err {
-			t.Errorf("%s[ErrorTrigger]: got `%v`, want `%v`", descr, err, test.err)
+			t.Errorf(
+				"%s[ErrorTrigger]: testEndpoint is `%s`, testReferer is `%s`\ngot `%v`, want `%v`",
+				descr, test.testEndpoint, test.testReferer, err, test.err,
+			)
 		}
 
 		if err != nil {
@@ -23,12 +26,18 @@ func TestParse(t *testing.T) {
 
 		endpoint := ec.Endpoint()
 		if endpoint != test.endpoint {
-			t.Errorf("%s[Endpoint]: got `%s`, want `%s`", descr, endpoint, test.endpoint)
+			t.Errorf(
+				"%s[Endpoint]: testEndpoint is `%s`, testReferer is `%s`\ngot `%s`, want `%s`",
+				descr, test.testEndpoint, test.testReferer, endpoint, test.endpoint,
+			)
 		}
 
 		host := ec.StaticHost()
 		if host != test.host {
-			t.Errorf("%s[StaticHost]: got `%s`, want `%s`", descr, host, test.host)
+			t.Errorf(
+				"%s[StaticHost]: testEndpoint is `%s`, testReferer is `%s`\ngot `%s`, want `%s`",
+				descr, test.testEndpoint, test.testReferer, host, test.host,
+			)
 		}
 	}
 }

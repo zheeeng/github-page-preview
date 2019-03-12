@@ -21,7 +21,7 @@ func NewRemoteFileServe(staticFolder string) RemoteFileServe {
 	return &remoteFileServe{
 		// Note: Here we setted a endpoint transformer, it will be called before consuming endpoint,
 		// therefore we must call a reverse-direction transformer before feeding endpoint to consumer.
-		// Look into Start func below, we called `utils.PreventRedirection(req)` for doing it.
+		// Look into Start func below, we called `utils.PreventRedirection(req)` to do it.
 		remoteFileSystem: NewRemoteFileSystem(staticFolder).SetEndpointTransformer(utils.RestoreHijacked),
 	}
 }
