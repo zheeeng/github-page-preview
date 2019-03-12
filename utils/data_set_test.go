@@ -31,7 +31,7 @@ var testsForURLComponentsFunctionality = []structForURLComponentsFunctionality{
 		"/user/repo/blob/master/example//sub/path/index.html",
 		"/user/repo/master/example/sub/path/favicon.ico",
 		"/user/repo/master/example",
-		utils.ErrNotMatchURLPattern,
+		nil,
 	},
 	{
 		"no 'blob/tree' in endpoint",
@@ -47,7 +47,7 @@ var testsForURLComponentsFunctionality = []structForURLComponentsFunctionality{
 		"/user/repo/master/example//sub/path/index.html",
 		"/user/repo/master/example/sub/path/favicon.ico",
 		"/user/repo/master/example",
-		utils.ErrNotMatchURLPattern,
+		nil,
 	},
 	{
 		"'tree' in endpoint",
@@ -63,7 +63,7 @@ var testsForURLComponentsFunctionality = []structForURLComponentsFunctionality{
 		"/user/repo/tree/master/example//sub/path/index.html",
 		"/user/repo/master/example/sub/path/favicon.ico",
 		"/user/repo/master/example",
-		utils.ErrNotMatchURLPattern,
+		nil,
 	},
 	{
 		"no folder",
@@ -79,7 +79,7 @@ var testsForURLComponentsFunctionality = []structForURLComponentsFunctionality{
 		"/user/repo/blob/master/example//index.html",
 		"/user/repo/master/example/favicon.ico",
 		"/user/repo/master/example",
-		utils.ErrNotMatchURLPattern,
+		nil,
 	},
 
 	{
@@ -96,7 +96,7 @@ var testsForURLComponentsFunctionality = []structForURLComponentsFunctionality{
 		"/user/repo-name/blob/master/example//index.html",
 		"/user/repo-name/master/example/favicon.ico",
 		"/user/repo-name/master/example",
-		utils.ErrNotMatchURLPattern,
+		nil,
 	},
 
 	{
@@ -113,7 +113,7 @@ var testsForURLComponentsFunctionality = []structForURLComponentsFunctionality{
 		"/user/repo/blob/master/example/sub/path//index.html",
 		"/user/repo/master/example/sub/path/favicon.ico",
 		"/user/repo/master/example/sub/path",
-		utils.ErrNotMatchURLPattern,
+		nil,
 	},
 
 	{
@@ -130,7 +130,7 @@ var testsForURLComponentsFunctionality = []structForURLComponentsFunctionality{
 		"/user/repo/blob/master//",
 		"/user/repo/master/favicon.ico",
 		"/user/repo/master",
-		utils.ErrNotMatchURLPattern,
+		nil,
 	},
 
 	{
@@ -147,7 +147,7 @@ var testsForURLComponentsFunctionality = []structForURLComponentsFunctionality{
 		"/user/repo/blob/master/example//sub/path",
 		"/user/repo/master/example/sub/path/favicon.ico",
 		"/user/repo/master/example",
-		utils.ErrNotMatchURLPattern,
+		nil,
 	},
 	{
 		"no file2",
@@ -163,7 +163,7 @@ var testsForURLComponentsFunctionality = []structForURLComponentsFunctionality{
 		"/user/repo/blob/master/example//sub/path/",
 		"/user/repo/master/example/sub/path/favicon.ico",
 		"/user/repo/master/example",
-		utils.ErrNotMatchURLPattern,
+		nil,
 	},
 
 	// specifications fro no specified hosts URL
@@ -181,7 +181,7 @@ var testsForURLComponentsFunctionality = []structForURLComponentsFunctionality{
 		"/user/repo/blob/master/example/sub/path/index.html",
 		"/user/repo/master/example/sub/path/favicon.ico",
 		"/user/repo/master/example/sub/path",
-		utils.ErrNotMatchURLPattern,
+		nil,
 	},
 
 	{
@@ -198,7 +198,7 @@ var testsForURLComponentsFunctionality = []structForURLComponentsFunctionality{
 		"/user/repo/blob/master/index.html",
 		"/user/repo/master/favicon.ico",
 		"/user/repo/master",
-		utils.ErrNotMatchURLPattern,
+		nil,
 	},
 
 	{
@@ -215,7 +215,7 @@ var testsForURLComponentsFunctionality = []structForURLComponentsFunctionality{
 		"/user/repo/blob/master/example/sub/path",
 		"/user/repo/master/example/sub/path/favicon.ico",
 		"/user/repo/master/example/sub/path",
-		utils.ErrNotMatchURLPattern,
+		nil,
 	},
 
 	{
@@ -232,29 +232,29 @@ var testsForURLComponentsFunctionality = []structForURLComponentsFunctionality{
 		"/user/repo/blob/master/example/sub/path/",
 		"/user/repo/master/example/sub/path/favicon.ico",
 		"/user/repo/master/example/sub/path",
-		utils.ErrNotMatchURLPattern,
+		nil,
 	},
 	{
 		testName:     "local root page triggers error",
 		testEndpoint: "/",
-		err:          utils.ErrNotMatchURLPattern,
+		err:          utils.ErrNotRecognizeURL,
 	},
 	{
 		testName:     "local index page triggers error",
 		testEndpoint: "/index.html",
-		err:          utils.ErrNotMatchURLPattern,
+		err:          utils.ErrNotRecognizeURL,
 	},
 	{
 		testName:     "local asset, referer is root page",
 		testEndpoint: "/favicon.ico",
 		testReferer:  "/",
-		err:          utils.ErrNotMatchURLPattern,
+		err:          utils.ErrNotRecognizeURL,
 	},
 	{
 		testName:     "local asset, referer is index page",
 		testEndpoint: "/favicon.ico",
 		testReferer:  "/index.html",
-		err:          utils.ErrNotMatchURLPattern,
+		err:          utils.ErrNotRecognizeURL,
 	},
 }
 

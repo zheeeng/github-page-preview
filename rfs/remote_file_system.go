@@ -48,9 +48,9 @@ func (rfs *remoteFileSystem) Open(endpoint string) (RemoteFile, error) {
 		endpoint = rfs.endpointTransformer(endpoint)
 	}
 
-	pc, err := utils.NewPathComponents(endpoint, rfs.referer)
+	ec, err := utils.NewEndpointComponents(endpoint, rfs.referer)
 
-	if err == utils.ErrNotMatchURLPattern {
+	if err == utils.ErrNotRecognizeURL {
 		dir := http.Dir(rfs.staticFolder)
 		// index page alias to `/`
 		if endpoint == "/" && rfs.referer == "" {
@@ -63,7 +63,7 @@ func (rfs *remoteFileSystem) Open(endpoint string) (RemoteFile, error) {
 		return nil, errors.New("not found")
 	}
 
-	resp, err := http.Get(proxyTarget + pc.Endpoint())
+	resp, err := http.Get(proxyTarget + ec.Endpoint())
 
 	if err != nil {
 		return nil, errors.New("not found")
@@ -76,5 +76,5 @@ func (rfs *remoteFileSystem) Open(endpoint string) (RemoteFile, error) {
 		return nil, err
 	}
 
-	return NewRemoteFile(pc.GetFile(), data), nil
+	return NewRemoteFile(ec.GetFile(), data), nil
 }
