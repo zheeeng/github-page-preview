@@ -1,61 +1,74 @@
 package utils
 
 import (
-	"errors"
 	"fmt"
-	"path/filepath"
+	"math"
+	"path"
 	"regexp"
 	"strings"
 )
 
+// EndpointType indicates the type of  EndpointType
+type EndpointType int
+
 const (
-	matchURLPattern = iota
+	// EndpointLocalAsset presents reading static asset
+	EndpointLocalAsset EndpointType = iota
+	// EndpointRemoteAsset presents reading remote asset
+	EndpointRemoteAsset
+	// EndpointRedirect presents redirect endpoint to process it again
+	EndpointRedirect
+	// EndpointNotFound presents 404
+	EndpointNotFound
+)
+
+type matchPattern int
+
+const (
+	matchBasePattern matchPattern = 1
+	matchURLPattern               = 1 << iota
 	matchURLWithoutHostPattern
-	matchRootPattern
 	matchFilePattern
 )
 
-var (
-	baseExp           = regexp.MustCompile(`^/[\w-~]+/[\w-~]+(/blob|/tree)?/[\w-~]+`)
-	urlExp            = regexp.MustCompile(`^/(?P<user>[\w-~]+)/(?P<repo>[\w-~]+)(/blob|/tree)?/(?P<branch>[\w-~]+)(?P<path>[\w-~/]*)::/(?P<folder>[\w-~/]*?)(?P<file>(/?[^/\s]+\.[^/\s]+)?$)`)
-	urlWithoutHostExp = regexp.MustCompile(`^/(?P<user>[\w-~]+)/(?P<repo>[\w-~]+)(/blob|/tree)?/(?P<branch>[\w-~]+)(?P<path>[\w-~/]*)(?P<file>(/[^/\s]+\.[^/\s]+)?$)`)
-	rootExp           = regexp.MustCompile(`^/$`)
-	fileExp           = regexp.MustCompile(`^/(?P<file>.*)`)
-)
+// count for endpoint types
+var mpc = uint(math.Log2(float64(matchFilePattern)))
 
 var (
-	// ErrNotRecognizeURL presents url path no patterns matching
-	ErrNotRecognizeURL = errors.New("Can't recognize the path format")
+	baseExp           = regexp.MustCompile(`^/(?P<user>[\w-~]+/)(?P<repo>[\w-~]+/)(?P<blob>blob/|tree/)(?P<branch>[\w-~:]+/)`)
+	urlExp            = regexp.MustCompile(`^/(?P<user>[\w-~]+/)(?P<repo>[\w-~]+/)(?P<blob>blob/|tree/)(?P<branch>[\w-~]+/?)(?P<path>[\w-~/]*)::/(?P<folder>[\w-~/]*?)(?P<file>(/?[^/\s]+\.[^/\s]+)?$)`)
+	urlWithoutHostExp = regexp.MustCompile(`^/(?P<user>[\w-~]+/)(?P<repo>[\w-~]+/)(?P<blob>blob/|tree/)(?P<branch>[\w-~]+/?)(?P<path>[\w-~/]*)(?P<file>(/[^/\s]+\.[^/\s]+)?$)`)
+	fileExp           = regexp.MustCompile(`^/(?P<file>.*)`)
 )
 
 // PathComponents interface
 type PathComponents interface {
 	Endpoint() string
-	StaticHost() string
+	GetEndpointType() EndpointType
 	GetName() string
 }
 
 type endpointComponents struct {
-	matchType int
-	isFolder  bool
-	user      string
-	repo      string
-	branch    string
-	path      string
-	folder    string
-	file      string
+	endpointType EndpointType
+	matchType    matchPattern
+	user         string
+	repo         string
+	blob         string
+	branch       string
+	path         string
+	folder       string
+	file         string
+	isFolder     bool
 }
 
 func patternMatch(endpoint string) *endpointComponents {
 	endpointBytes := []byte(endpoint)
 
-	switch true {
+	switch {
 	case urlExp.Match(endpointBytes):
 		return (&endpointComponents{matchType: matchURLPattern}).parseFrom(endpoint, urlExp)
 	case urlWithoutHostExp.Match(endpointBytes):
 		return (&endpointComponents{matchType: matchURLWithoutHostPattern}).parseFrom(endpoint, urlWithoutHostExp)
-	case rootExp.Match(endpointBytes):
-		return (&endpointComponents{matchType: matchRootPattern}).parseFrom(endpoint, rootExp)
 	case fileExp.Match(endpointBytes):
 		return (&endpointComponents{matchType: matchFilePattern}).parseFrom(endpoint, fileExp)
 	default:
@@ -65,104 +78,210 @@ func patternMatch(endpoint string) *endpointComponents {
 }
 
 // NewEndpointComponents returns endpointComponents instance
-func NewEndpointComponents(path string, referer string) (PathComponents, error) {
+func NewEndpointComponents(path string, referer string) PathComponents {
+	ec, code := newEndpointComponentsProxy(path, referer)
+
+	ec.endpointType = code
+	return ec
+}
+
+func newEndpointComponentsProxy(path string, referer string) (*endpointComponents, EndpointType) {
 	refEC := patternMatch(referer)
 	pathEC := patternMatch(path)
 
-	if pathEC == nil {
-		panic("impossible situation")
-	}
-
-	if refEC == nil {
-		if pathEC.matchType == matchRootPattern || pathEC.matchType == matchFilePattern {
-			return nil, ErrNotRecognizeURL
+	switch {
+	// path ""
+	// 	It is impossible, browser always append "/" to root path
+	case pathEC == nil:
+		panic("impossible path value")
+	// referer ""
+	case refEC == nil:
+		// path "/user/repo/blob/master/example::/sub/path/"
+		// path "/user/repo/blob/master/example::/sub/path"
+		// path "/user/repo/blob/master/example/sub/path/"
+		// path "/user/repo/blob/master/example/sub/path"
+		// path "/example"
+		// 	Redirect to index page
+		if pathEC.isFolder {
+			return pathEC, EndpointRedirect
 		}
+		switch pathEC.matchType {
+		case matchURLPattern, matchURLWithoutHostPattern:
+			return pathEC, EndpointRemoteAsset
+		default:
+			return pathEC, EndpointLocalAsset
+		}
+	// path is not "", referer is not ""
+	default:
+		if refEC.isFolder {
+			panic("refEC must not be a folder, path will always be redirected to index page")
+		}
+		switch refEC.matchType<<mpc | pathEC.matchType {
 
-		return pathEC, nil
+		case matchURLPattern<<mpc | matchURLPattern, matchURLPattern<<mpc | matchURLWithoutHostPattern:
+			// referer "/user/repo/blob/master::/index.html"
+			// path "./favicon.ico" --> "/user/repo/blob/master::/favicon.ico"
+			// path "/user/repo2/blob/master::/favicon.ico"
+			// path "/user/repo/blob/master/favicon.ico"
+			//	Request remote asset
+			return pathEC, EndpointRemoteAsset
+		case matchURLPattern<<mpc | matchFilePattern:
+			// referer "/user/repo/blob/master::/index.html"
+			// path "../favicon.ico" --> "/user/repo/blob/favicon.ico"
+			// path "/user/repo/blob/favicon.ico"
+			// 	We do not allow path eliminating chunks of github branch pattern
+			if refEC.hasSubPrefixWith(path) {
+				return pathEC, EndpointNotFound
+			}
+			// path "/favicon.icon"
+			// 	We redirect to remote asset:
+			return refEC.setFolder("").setFile(pathEC.getFile()), EndpointRedirect
+
+		case matchURLWithoutHostPattern<<mpc | matchURLPattern, matchURLWithoutHostPattern<<mpc | matchURLWithoutHostPattern:
+			// referer "/user/repo/blob/master/index.html"
+			// path "/user/repo/blob/master::/index."
+			// path "/user/repo/blob/master/favicon.ico"
+			return pathEC, EndpointRemoteAsset
+		case matchURLWithoutHostPattern<<mpc | matchFilePattern:
+			// referer "/user/repo/blob/master/index.html"
+			// path "../favicon.ico" --> "/user/repo/blob/master/favicon.ico"
+			// 	We do not allow path eliminating chunks of github branch pattern
+			if refEC.hasSubPrefixWith(path) {
+				return pathEC, EndpointNotFound
+			}
+			// path "/favicon.ico"
+			return refEC.setFile(pathEC.getFile()), EndpointRedirect
+
+		case matchFilePattern<<mpc | matchURLPattern, matchFilePattern<<mpc | matchURLWithoutHostPattern:
+			// referer "/index.html"
+			// path "/user/repo/blob/master::/index.html"
+			// path "/user/repo/blob/master/index.html"
+			return pathEC, EndpointRemoteAsset
+		case matchFilePattern<<mpc | matchFilePattern:
+			// referer "/index.html"
+			// path "/"
+			// path "/example"
+			// 	Redirect to index page
+			if pathEC.isFolder {
+				return pathEC, EndpointRedirect
+			}
+			// path "./favicon.icon" -> "/favicon.icon"
+			// path "/favicon.icon"
+			return pathEC, EndpointLocalAsset
+		default:
+			panic("unexpected situation")
+		}
 	}
-
-	if refEC.matchType == matchRootPattern || refEC.matchType == matchFilePattern {
-		return NewEndpointComponents(path, "")
-	}
-
-	if pathEC.matchType == matchFilePattern {
-		return refEC.setFolder(pathEC.getFolder()).setFile(pathEC.getFile()), nil
-	}
-
-	if pathEC.matchType == matchURLPattern && !refEC.isFolder {
-		return refEC.setFolder(pathEC.getFolder()).setFile(pathEC.getFile()), nil
-	}
-
-	return refEC.setFile(pathEC.getFile()), nil
 }
 
-func (uc *endpointComponents) setFile(file string) *endpointComponents {
-	uc.file = file
-	return uc
+func (ec *endpointComponents) setFile(file string) *endpointComponents {
+	ec.file = file
+	return ec
 }
-func (uc *endpointComponents) getFile() string {
-	return uc.file
+func (ec *endpointComponents) getFile() string {
+	return ec.file
 }
-func (uc *endpointComponents) setFolder(folder string) *endpointComponents {
-	uc.folder = folder
-	return uc
-}
-
-func (uc *endpointComponents) getFolder() string {
-	return uc.folder
+func (ec *endpointComponents) setFolder(folder string) *endpointComponents {
+	ec.folder = folder
+	return ec
 }
 
-func (uc *endpointComponents) GetName() string {
-	return uc.file
+func (ec *endpointComponents) getFolder() string {
+	return ec.folder
 }
 
-func (uc *endpointComponents) parseFrom(path string, reg *regexp.Regexp) *endpointComponents {
-	match := reg.FindStringSubmatch(path)
+func (ec *endpointComponents) GetName() string {
+	return ec.file
+}
+
+func (ec *endpointComponents) parseFrom(endpoint string, reg *regexp.Regexp) *endpointComponents {
+	match := reg.FindStringSubmatch(endpoint)
 
 	for i, name := range reg.SubexpNames() {
 		switch name {
 		case "user":
-			uc.user = match[i]
+			ec.user = match[i]
+		case "blob":
+			ec.blob = match[i]
 		case "repo":
-			uc.repo = match[i]
+			ec.repo = match[i]
 		case "branch":
-			uc.branch = match[i]
+			ec.branch = match[i]
 		case "path":
-			uc.path = match[i]
-			if strings.HasSuffix(uc.path, "/") {
-				uc.path = uc.path[0 : len(uc.path)-1]
+			ec.path = match[i]
+			if strings.HasSuffix(ec.path, "/") {
+				ec.path = ec.path[0 : len(ec.path)-1]
 			}
 		case "folder":
-			uc.folder = match[i]
-			if uc.folder != "" {
-				uc.folder = "/" + uc.folder
+			ec.folder = match[i]
+			if ec.folder != "" {
+				ec.folder = "/" + ec.folder
 			}
-			if strings.HasSuffix(uc.folder, "/") {
-				uc.folder = uc.folder[0 : len(uc.folder)-1]
+			if strings.HasSuffix(ec.folder, "/") {
+				ec.folder = ec.folder[0 : len(ec.folder)-1]
 			}
 		case "file":
-			uc.file = match[i]
-			if uc.file == "" {
-				uc.isFolder = true
-			}
-			if !strings.HasPrefix(uc.file, "/") {
-				uc.file = "/" + uc.file
-			}
-			if strings.HasSuffix(uc.file, "/") {
-				uc.file += "index.html"
-			} else if filepath.Ext(uc.file) == "" {
-				uc.file += "/index.html"
+			ec.file = match[i]
+			if path.Ext(ec.file) == "" {
+				ec.isFolder = true
+				ec.file += "/index.html"
+			} else if ec.file == "" {
+				ec.file = "/index.html"
+			} else if !strings.HasSuffix(ec.file, "/") {
+				ec.file = "/" + ec.file
 			}
 		}
 	}
 
-	return uc
+	return ec
 }
 
-func (uc *endpointComponents) Endpoint() string {
-	return fmt.Sprintf("/%s/%s/%s%s%s%s", uc.user, uc.repo, uc.branch, uc.path, uc.folder, uc.file)
+func (ec *endpointComponents) Endpoint() (endpoint string) {
+	switch ec.endpointType {
+	case EndpointLocalAsset:
+		endpoint = "/" + ec.file
+	case EndpointRemoteAsset:
+		endpoint = fmt.Sprintf(
+			"/%s%s%s%s%s%s",
+			ec.user, ec.repo, ec.branch, ec.path, ec.folder, ec.file,
+		)
+	case EndpointRedirect:
+		if ec.matchType == matchURLPattern {
+			endpoint = fmt.Sprintf("/%s%s%s%s%s::/%s%s", ec.user, ec.repo, ec.blob, ec.branch, ec.path, ec.folder, ec.file)
+		} else {
+			endpoint = fmt.Sprintf("/%s%s%s%s%s%s%s", ec.user, ec.repo, ec.blob, ec.branch, ec.path, ec.folder, ec.file)
+		}
+	}
+
+	return path.Clean(endpoint)
 }
 
-func (uc *endpointComponents) StaticHost() string {
-	return fmt.Sprintf("/%s/%s/%s%s", uc.user, uc.repo, uc.branch, uc.path)
+func (ec *endpointComponents) GetEndpointType() EndpointType {
+	return ec.endpointType
+}
+
+// Rule:
+// endpoint: /a/b/c/d/, has sub endpoints /a/, /a/b/, /a/b/c/
+// testEndpoint: /a'/b'/c'/d'/e', has 6 chunks, returns false
+// testEndpoint: /a'/b'/c'/d', has 5 chunks, if /a'/b'/c'/d' contains /a/b/c/ then returns true else returns false
+// testEndpoint: /a'/b'/c', has 4 chunks, if /a'/b'/c' contains /a/b/ then returns true else returns false
+// testEndpoint: /a'/b', has 3 chunks, if /a'/b' contains /a/ then returns true else returns false
+// testEndpoint: /a', has 2 chunks, always returns false
+func (ec *endpointComponents) hasSubPrefixWith(endpoint string) bool {
+	chunks := strings.Split(endpoint, "/")
+	cLen := len(chunks)
+	if cLen < 3 {
+		return false
+	}
+	// We only check max four chunks
+	if cLen > 5 {
+		cLen = 5
+	}
+
+	prefix := strings.Join(
+		([]string{"/", ec.user, ec.repo, ec.blob})[0:cLen-1],
+		"",
+	)
+
+	return strings.HasPrefix(endpoint, prefix)
 }

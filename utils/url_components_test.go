@@ -7,36 +7,73 @@ import (
 	"github.com/github-page-preview/utils"
 )
 
+func codeTransToLiteral(code utils.EndpointType) string {
+	switch code {
+	case EndpointLocalAsset:
+		return "EndpointLocalAsset"
+	case EndpointRemoteAsset:
+		return "EndpointRemoteAsset"
+	case EndpointRedirect:
+		return "EndpointRedirect"
+	case EndpointNotFound:
+		return "EndpointNotFound"
+	default:
+		panic("Debug plz")
+	}
+}
+
+func TestParsePanic(t *testing.T) {
+	for i, test := range testsForURLComponentsPanic {
+		func(i int, test structForURLComponentsPanic) {
+			defer func() {
+				if r := recover(); r == nil {
+					t.Errorf(
+						"\n[%d] [Trigger Panic]: \ntestEndpoint is `%s`, \ntestReferer is `%s`\nshould trigger panic",
+						i, test.testEndpoint, test.testReferer,
+					)
+				}
+			}()
+			utils.NewEndpointComponents(test.testEndpoint, test.testReferer)
+		}(i, test)
+	}
+}
+
 func TestParse(t *testing.T) {
-	for _, test := range testsForURLComponentsFunctionality {
-		descr := fmt.Sprintf("\nTest [%s] failed:\n", test.testName)
+	var panicLogIndex int
+	var panicLogDescr string
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Printf("\nTest [%d] has panic: %s\n", panicLogIndex, panicLogDescr)
+		}
+	}()
 
-		ec, err := utils.NewEndpointComponents(test.testEndpoint, test.testReferer)
+	for i, test := range testsForURLComponentsFunctionality {
+		descr := fmt.Sprintf("\n[%d] Test [%s] failed:\n", i, test.testName)
+		panicLogIndex = i
+		panicLogDescr = descr
 
-		if err != test.err {
+		ec := utils.NewEndpointComponents(test.testEndpoint, test.testReferer)
+
+		code := ec.GetEndpointType()
+
+		if code != test.code {
 			t.Errorf(
-				"%s[ErrorTrigger]: testEndpoint is `%s`, testReferer is `%s`\ngot `%v`, want `%v`",
-				descr, test.testEndpoint, test.testReferer, err, test.err,
+				"%s[Trigger Error]: \ntestEndpoint is `%s`, \ntestReferer is `%s`\ngot `%v`, want `%v`",
+				descr, test.testEndpoint, test.testReferer,
+				codeTransToLiteral(code), codeTransToLiteral(test.code),
 			)
 		}
 
-		if err != nil {
+		if test.code == utils.EndpointNotFound {
 			continue
 		}
 
 		endpoint := ec.Endpoint()
-		if endpoint != test.endpoint {
+
+		if endpoint != test.endpointOrRaw {
 			t.Errorf(
 				"%s[Endpoint]: testEndpoint is `%s`, testReferer is `%s`\ngot `%s`, want `%s`",
-				descr, test.testEndpoint, test.testReferer, endpoint, test.endpoint,
-			)
-		}
-
-		host := ec.StaticHost()
-		if host != test.host {
-			t.Errorf(
-				"%s[StaticHost]: testEndpoint is `%s`, testReferer is `%s`\ngot `%s`, want `%s`",
-				descr, test.testEndpoint, test.testReferer, host, test.host,
+				descr, test.testEndpoint, test.testReferer, endpoint, test.endpointOrRaw,
 			)
 		}
 	}
