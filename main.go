@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	port         = ":8090"
+	port         = "8090"
 	staticFolder = "./public"
 	remoteHost   = "https://raw.githubusercontent.com"
 )
