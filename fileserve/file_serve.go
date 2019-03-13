@@ -1,4 +1,4 @@
-package rfs
+package fileserve
 
 import (
 	"net/http"
@@ -7,25 +7,25 @@ import (
 	"github.com/github-page-preview/utils"
 )
 
-// RemoteFileServe provides Start func
-type RemoteFileServe interface {
+// FileServe provides Start func
+type FileServe interface {
 	Start(res http.ResponseWriter, req *http.Request)
 }
 
-type remoteFileServe struct {
+type fileServe struct {
 	localFileHandler  http.Handler
 	remoteFileHandler http.Handler
 }
 
-// NewRemoteFileServe initializes RemoteFileServe
-func NewRemoteFileServe(staticFolder string, remoteHost string) RemoteFileServe {
+// NewFileServe initializes FileServe
+func NewFileServe(staticFolder string, remoteHost string) FileServe {
 	// Note: Here we setted endpoint transformers, they will be called before consuming endpoint,
 	// therefore we must call a reverse-direction transformer before feeding endpoint to consumer.
 	// Look into Start func below, we called `utils.PreventRedirection(req)` to do it.
 	lfs := NewLocalFileSystem(staticFolder).SetEndpointTransformer(utils.RestoreHijacked)
 	rfs := NewRemoteFileSystem(remoteHost).SetEndpointTransformer(utils.RestoreHijacked)
 
-	return &remoteFileServe{
+	return &fileServe{
 		localFileHandler:  http.FileServer(lfs),
 		remoteFileHandler: http.FileServer(rfs),
 	}
@@ -62,17 +62,17 @@ func notFound(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotFound)
 }
 
-func (rfsv *remoteFileServe) Start(res http.ResponseWriter, req *http.Request) {
+func (fsv *fileServe) Start(res http.ResponseWriter, req *http.Request) {
 	ec := utils.NewEndpointComponents(getEndpoint(req), getReferer(req))
 	ep := ec.Endpoint()
 
 	switch ec.GetEndpointType() {
 	case utils.EndpointLocalAsset:
 		setEndpoint(req, ep)
-		rfsv.localFileHandler.ServeHTTP(res, req)
+		fsv.localFileHandler.ServeHTTP(res, req)
 	case utils.EndpointRemoteAsset:
 		setEndpoint(req, ep)
-		rfsv.remoteFileHandler.ServeHTTP(res, req)
+		fsv.remoteFileHandler.ServeHTTP(res, req)
 	case utils.EndpointRedirect:
 		redirect(res, req, ep)
 	case utils.EndpointNotFound:

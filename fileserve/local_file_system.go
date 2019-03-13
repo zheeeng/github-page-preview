@@ -1,4 +1,4 @@
-package rfs
+package fileserve
 
 import (
 	"net/http"
@@ -22,17 +22,17 @@ func NewLocalFileSystem(staticFolder string) LocalFileSystem {
 	}
 }
 
-func (rfs *localFileSystem) Open(endpoint string) (RemoteFile, error) {
-	if rfs.endpointTransformer != nil {
-		endpoint = rfs.endpointTransformer(endpoint)
+func (lfs *localFileSystem) Open(endpoint string) (RemoteFile, error) {
+	if lfs.endpointTransformer != nil {
+		endpoint = lfs.endpointTransformer(endpoint)
 	}
 
-	return rfs.fileSystem.Open(endpoint)
+	return lfs.fileSystem.Open(endpoint)
 }
 
 // SetEndpointTransformer set the endpoint transformer,
 // which will be called before consuming the request endpoint.
-func (rfs *localFileSystem) SetEndpointTransformer(endpointTransformer func(string) string) LocalFileSystem {
-	rfs.endpointTransformer = endpointTransformer
-	return rfs
+func (lfs *localFileSystem) SetEndpointTransformer(endpointTransformer func(string) string) LocalFileSystem {
+	lfs.endpointTransformer = endpointTransformer
+	return lfs
 }

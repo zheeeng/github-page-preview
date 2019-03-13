@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/github-page-preview/rfs"
+	"github.com/github-page-preview/fileserve"
 	"github.com/github-page-preview/utils"
 )
 
@@ -24,7 +24,7 @@ func init() {
 }
 
 func main() {
-	rfsv := rfs.NewRemoteFileServe(staticFolder, remoteHost)
+	fsv := fileserve.NewFileServe(staticFolder, remoteHost)
 
 	handler := utils.Compose(
 		utils.IfElse(
@@ -32,7 +32,7 @@ func main() {
 			utils.Err(methodHandlerFunc),
 			utils.Next(utils.EmptyHandlerFunc),
 		),
-		utils.Complete(rfsv.Start),
+		utils.Complete(fsv.Start),
 	)
 
 	http.HandleFunc("/", handler)

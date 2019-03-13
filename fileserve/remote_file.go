@@ -1,4 +1,4 @@
-package rfs
+package fileserve
 
 import (
 	"net/http"
