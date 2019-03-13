@@ -45,7 +45,6 @@ var (
 type PathComponents interface {
 	Endpoint() string
 	GetEndpointType() EndpointType
-	GetName() string
 }
 
 type endpointComponents struct {
@@ -188,10 +187,6 @@ func (ec *endpointComponents) setFolder(folder string) *endpointComponents {
 
 func (ec *endpointComponents) getFolder() string {
 	return ec.folder
-}
-
-func (ec *endpointComponents) GetName() string {
-	return ec.file
 }
 
 func (ec *endpointComponents) parseFrom(endpoint string, reg *regexp.Regexp) *endpointComponents {

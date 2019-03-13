@@ -4,31 +4,40 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/github-page-preview/utils"
-
 	"github.com/github-page-preview/rfs"
+	"github.com/github-page-preview/utils"
 )
 
-const defaultPort = "8090"
+var (
+	port         = ":8090"
+	staticFolder = "./public"
+	remoteHost   = "https://raw.githubusercontent.com"
+)
 
-func getPort() string {
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = defaultPort
+func init() {
+	if envPort := os.Getenv("PORT"); envPort != "" {
+		port = envPort
 	}
-
-	return ":" + port
+	if envStaticFolder := os.Getenv("STATIC_FOLDER"); envStaticFolder != "" {
+		staticFolder = envStaticFolder
+	}
 }
 
 func main() {
-	rfsv := rfs.NewRemoteFileServe("./public")
+	rfsv := rfs.NewRemoteFileServe(staticFolder, remoteHost)
 
-	http.HandleFunc("/", utils.HTTPHandlersCompose(
-		methodHandler,
-		utils.CompleteHandler(rfsv.Start),
-	))
+	handler := utils.Compose(
+		utils.IfElse(
+			shouldCallMethodHandlerFunc,
+			utils.Err(methodHandlerFunc),
+			utils.Next(utils.EmptyHandlerFunc),
+		),
+		utils.Complete(rfsv.Start),
+	)
 
-	http.ListenAndServe(getPort(), nil)
+	http.HandleFunc("/", handler)
+
+	http.ListenAndServe(":"+port, nil)
 }
 
 func methodHandler(res http.ResponseWriter, req *http.Request) utils.Cont {
@@ -41,4 +50,12 @@ func methodHandler(res http.ResponseWriter, req *http.Request) utils.Cont {
 
 		next()
 	}
+}
+
+func shouldCallMethodHandlerFunc(res http.ResponseWriter, req *http.Request) bool {
+	return req.Method != http.MethodGet
+}
+
+func methodHandlerFunc(res http.ResponseWriter, req *http.Request) {
+	http.Error(res, http.ErrBodyNotAllowed.Error(), http.StatusMethodNotAllowed)
 }

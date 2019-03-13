@@ -10,6 +10,9 @@ type Cont func(next func(), complete func(), err func())
 // HTTPHandler is typed to a nextable  http.HandlerFunc
 type HTTPHandler func(res http.ResponseWriter, req *http.Request) Cont
 
+// HTTPHandlerCondition returns a bool result by http response and request
+type HTTPHandlerCondition func(res http.ResponseWriter, req *http.Request) bool
+
 type signal int
 
 var (
@@ -54,8 +57,20 @@ func isErr() bool {
 	return s == e
 }
 
-// NextHandler returns HTTPHandler which executes http.HandlerFunc and then call next automatically
-func NextHandler(handler http.HandlerFunc) HTTPHandler {
+// EmptyHandlerFunc do nothing
+func EmptyHandlerFunc(res http.ResponseWriter, req *http.Request) {}
+
+// Of returns HTTPHandler which executes http.HandlerFunc
+func Of(handler http.HandlerFunc) HTTPHandler {
+	return func(res http.ResponseWriter, req *http.Request) Cont {
+		return func(next func(), complete func(), err func()) {
+			handler(res, req)
+		}
+	}
+}
+
+// Next returns HTTPHandler which executes http.HandlerFunc and then call next automatically
+func Next(handler http.HandlerFunc) HTTPHandler {
 	return func(res http.ResponseWriter, req *http.Request) Cont {
 		return func(next func(), complete func(), err func()) {
 			handler(res, req)
@@ -64,8 +79,8 @@ func NextHandler(handler http.HandlerFunc) HTTPHandler {
 	}
 }
 
-// CompleteHandler returns HTTPHandler which executes http.HandlerFunc and then call next automatically
-func CompleteHandler(handler http.HandlerFunc) HTTPHandler {
+// Complete returns HTTPHandler which executes http.HandlerFunc and then call next automatically
+func Complete(handler http.HandlerFunc) HTTPHandler {
 	return func(res http.ResponseWriter, req *http.Request) Cont {
 		return func(next func(), complete func(), err func()) {
 			handler(res, req)
@@ -74,8 +89,31 @@ func CompleteHandler(handler http.HandlerFunc) HTTPHandler {
 	}
 }
 
-// HTTPHandlersCompose compose multiple HTTPHandlers
-func HTTPHandlersCompose(handlers ...HTTPHandler) http.HandlerFunc {
+// Err returns HTTPHandler which executes http.HandlerFunc and then call err automatically
+func Err(handler http.HandlerFunc) HTTPHandler {
+	return func(res http.ResponseWriter, req *http.Request) Cont {
+		return func(next func(), complete func(), err func()) {
+			handler(res, req)
+			err()
+		}
+	}
+}
+
+// IfElse call a pair HTTPHandler by condition
+func IfElse(condFunc HTTPHandlerCondition, handlerFunc1, handlerFunc2 HTTPHandler) HTTPHandler {
+	return func(res http.ResponseWriter, req *http.Request) Cont {
+		return func(next func(), complete func(), err func()) {
+			if condFunc(res, req) {
+				handlerFunc1(res, req)
+			} else {
+				handlerFunc2(res, req)
+			}
+		}
+	}
+}
+
+// Compose compose multiple HTTPHandlers
+func Compose(handlers ...HTTPHandler) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		for _, h := range handlers {
 			reset()

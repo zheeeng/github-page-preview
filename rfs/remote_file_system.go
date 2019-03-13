@@ -4,66 +4,35 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
-
-	"github.com/github-page-preview/utils"
+	"strings"
 )
-
-const proxyTarget = "https://raw.githubusercontent.com"
 
 // RemoteFileSystem implements http.FileServer interface
 type RemoteFileSystem interface {
 	http.FileSystem
-	SetReferer(string) RemoteFileSystem
 	SetEndpointTransformer(endpointTransformer func(string) string) RemoteFileSystem
 }
 
 type remoteFileSystem struct {
-	referer             string
-	staticFolder        string
+	remoteHost          string
 	endpointTransformer func(string) string
 }
 
 // NewRemoteFileSystem initializes RemoteFileSystem
-func NewRemoteFileSystem(staticFolder string) RemoteFileSystem {
-	return &remoteFileSystem{
-		staticFolder: staticFolder,
-	}
+func NewRemoteFileSystem(remoteHost string) RemoteFileSystem {
+	return &remoteFileSystem{remoteHost: remoteHost}
 }
 
-// SetEndpointTransformer set the endpoint transformer,
-// which will be called before consuming the request endpoint.
-func (rfs *remoteFileSystem) SetEndpointTransformer(endpointTransformer func(string) string) RemoteFileSystem {
-	rfs.endpointTransformer = endpointTransformer
-	return rfs
-}
-
-// ConfigureStatic set the static reading folder, when url matches seeking local files rule
-func (rfs *remoteFileSystem) SetReferer(referer string) RemoteFileSystem {
-	rfs.referer = referer
-	return rfs
+func getName(endpoint string) string {
+	chunks := strings.Split(endpoint, "/")
+	return chunks[len(chunks)-1]
 }
 
 func (rfs *remoteFileSystem) Open(endpoint string) (RemoteFile, error) {
 	if rfs.endpointTransformer != nil {
 		endpoint = rfs.endpointTransformer(endpoint)
 	}
-
-	ec, err := utils.NewEndpointComponents(endpoint, rfs.referer)
-
-	if err == utils.ErrNotRecognizeURL {
-		dir := http.Dir(rfs.staticFolder)
-		// index page alias to `/`
-		if endpoint == "/" && rfs.referer == "" {
-			endpoint = "/index.html"
-		}
-		return dir.Open(endpoint)
-	}
-
-	if err != nil {
-		return nil, errors.New("not found")
-	}
-
-	resp, err := http.Get(proxyTarget + ec.Endpoint())
+	resp, err := http.Get(rfs.remoteHost + endpoint)
 
 	if err != nil {
 		return nil, errors.New("not found")
@@ -76,5 +45,12 @@ func (rfs *remoteFileSystem) Open(endpoint string) (RemoteFile, error) {
 		return nil, err
 	}
 
-	return NewRemoteFile(ec.GetName(), data), nil
+	return NewRemoteFile(getName(endpoint), data), nil
+}
+
+// SetEndpointTransformer set the endpoint transformer,
+// which will be called before consuming the request endpoint.
+func (rfs *remoteFileSystem) SetEndpointTransformer(endpointTransformer func(string) string) RemoteFileSystem {
+	rfs.endpointTransformer = endpointTransformer
+	return rfs
 }
