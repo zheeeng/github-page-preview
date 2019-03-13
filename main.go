@@ -40,18 +40,6 @@ func main() {
 	http.ListenAndServe(":"+port, nil)
 }
 
-func methodHandler(res http.ResponseWriter, req *http.Request) utils.Cont {
-	return func(next func(), complete func(), err func()) {
-		if req.Method != http.MethodGet {
-			http.Error(res, http.ErrBodyNotAllowed.Error(), http.StatusMethodNotAllowed)
-
-			err()
-		}
-
-		next()
-	}
-}
-
 func shouldCallMethodHandlerFunc(res http.ResponseWriter, req *http.Request) bool {
 	return req.Method != http.MethodGet
 }
