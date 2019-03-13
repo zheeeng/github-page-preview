@@ -104,9 +104,9 @@ func IfElse(condFunc HTTPHandlerCondition, handlerFunc1, handlerFunc2 HTTPHandle
 	return func(res http.ResponseWriter, req *http.Request) Cont {
 		return func(next func(), complete func(), err func()) {
 			if condFunc(res, req) {
-				handlerFunc1(res, req)
+				handlerFunc1(res, req)(next, complete, err)
 			} else {
-				handlerFunc2(res, req)
+				handlerFunc2(res, req)(next, complete, err)
 			}
 		}
 	}
