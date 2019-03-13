@@ -19,6 +19,9 @@ type remoteFileServe struct {
 
 // NewRemoteFileServe initializes RemoteFileServe
 func NewRemoteFileServe(staticFolder string, remoteHost string) RemoteFileServe {
+	// Note: Here we setted endpoint transformers, they will be called before consuming endpoint,
+	// therefore we must call a reverse-direction transformer before feeding endpoint to consumer.
+	// Look into Start func below, we called `utils.PreventRedirection(req)` to do it.
 	lfs := NewLocalFileSystem(staticFolder).SetEndpointTransformer(utils.RestoreHijacked)
 	rfs := NewRemoteFileSystem(remoteHost).SetEndpointTransformer(utils.RestoreHijacked)
 
