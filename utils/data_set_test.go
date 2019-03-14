@@ -19,11 +19,7 @@ type structForURLComponentsPanic struct {
 
 var testsForURLComponentsPanic = []structForURLComponentsPanic{
 	{"", "/user/repo/blob/master/example/sub/path/index.html"},
-	{"/", "/"},
-	{"/index.html", "/"},
-	{"/user/repo/blob/master/example::/sub/path/index.html", "/user/repo/blob/master/example/sub/path/"},
 	{"/user/repo/blob/master/example::/sub/path/index.html", "/user/repo/blob/master/example/sub/path"},
-	{"/user/repo/blob/master/example/sub/path/index.html", "/user/repo/blob/master/example/sub/path/"},
 	{"/user/repo/blob/master/example/sub/path/index.html", "/user/repo/blob/master/example/sub/path"},
 }
 
@@ -102,6 +98,27 @@ var testsForURLComponentsFunctionality = []structForURLComponentsFunctionality{
 		"/user/repo/blob/master/example::/favicon.ico",
 		EndpointRedirect,
 	},
+	{
+		"endpoint is relative to host; referer has no file",
+		"/favicon.ico",
+		"/user/repo/blob/master/example::/sub/path/",
+		"/user/repo/blob/master/example::/favicon.ico",
+		EndpointRedirect,
+	},
+	{
+		"endpoint is relative to host; referer has no file - 2",
+		"/favicon.ico",
+		"/user/repo/blob/master/example::/",
+		"/user/repo/blob/master/example::/favicon.ico",
+		EndpointRedirect,
+	},
+	{
+		"endpoint is relative to host; referer has no folder and file",
+		"/favicon.ico",
+		"/user/repo/blob/master/example::/index.html",
+		"/user/repo/blob/master/example::/favicon.ico",
+		EndpointRedirect,
+	},
 
 	{
 		"with special char symbols",
@@ -137,23 +154,23 @@ var testsForURLComponentsFunctionality = []structForURLComponentsFunctionality{
 		"no folder, no file",
 		"/user/repo/blob/master::/",
 		"",
-		"/user/repo/blob/master::/index.html",
-		EndpointRedirect,
+		"/user/repo/master/index.html",
+		EndpointRemoteAsset,
 	},
 
 	{
 		"no file",
 		"/user/repo/blob/master/example::/sub/path",
 		"",
-		"/user/repo/blob/master/example::/sub/path/index.html",
+		"/user/repo/blob/master/example::/sub/path/",
 		EndpointRedirect,
 	},
 	{
 		"no file - 2",
 		"/user/repo/blob/master/example::/sub/path/",
 		"",
-		"/user/repo/blob/master/example::/sub/path/index.html",
-		EndpointRedirect,
+		"/user/repo/master/example/sub/path/index.html",
+		EndpointRemoteAsset,
 	},
 
 	// specifications for no specified hosts URL
@@ -169,6 +186,13 @@ var testsForURLComponentsFunctionality = []structForURLComponentsFunctionality{
 		"/",
 		"/user/repo/blob/master/example/sub/path/index.html",
 		"/user/repo/blob/master/example/sub/path/index.html",
+		EndpointRedirect,
+	},
+	{
+		"endpoint redirects to referer; referer has no specified host - 2",
+		"/test",
+		"/user/repo/blob/master/example/sub/path/index.html",
+		"/user/repo/blob/master/example/sub/path/test/",
 		EndpointRedirect,
 	},
 	{
@@ -232,25 +256,25 @@ var testsForURLComponentsFunctionality = []structForURLComponentsFunctionality{
 	},
 
 	{
-		"no specified host, no file - 2",
+		"no specified host, no file",
 		"/user/repo/blob/master/example/sub/path",
 		"",
-		"/user/repo/blob/master/example/sub/path/index.html",
+		"/user/repo/blob/master/example/sub/path/",
 		EndpointRedirect,
 	},
 	{
 		"no specified host, no file - 2",
 		"/user/repo/blob/master/example/sub/path/",
 		"",
-		"/user/repo/blob/master/example/sub/path/index.html",
-		EndpointRedirect,
+		"/user/repo/master/example/sub/path/index.html",
+		EndpointRemoteAsset,
 	},
 	{
 		"endpoint redirects to referer; referer is index page",
 		"/",
 		"/index.html",
 		"/index.html",
-		EndpointRedirect,
+		EndpointLocalAsset,
 	},
 	{
 		"local asset; referer is root page",
@@ -261,32 +285,39 @@ var testsForURLComponentsFunctionality = []structForURLComponentsFunctionality{
 	},
 	{
 		"local asset, endpoint is folder",
-		"/example",
+		"/page",
 		"",
-		"/example/index.html",
+		"/page/",
 		EndpointRedirect,
 	},
 	{
 		"local asset, endpoint is folder - 2",
-		"/example",
+		"/page/",
 		"",
-		"/example/index.html",
-		EndpointRedirect,
+		"/page/index.html",
+		EndpointLocalAsset,
 	},
 	{
 		"local asset, endpoint is folder; referer is index page",
-		"/example",
+		"/page",
 		"/index.html",
-		"/example/index.html",
+		"/page/",
 		EndpointRedirect,
+	},
+	{
+		"local asset, endpoint is folder; referer is index page - 2",
+		"/page/",
+		"/index.html",
+		"/page/index.html",
+		EndpointLocalAsset,
 	},
 }
 
 func TestInputCases(t *testing.T) {
-	for _, test := range testsForURLComponentsFunctionality {
-		descr := fmt.Sprintf("\nTest [%s] failed:\n", test.testName)
+	for i, test := range testsForURLComponentsFunctionality {
+		descr := fmt.Sprintf("\n[%d] Test [%s] failed:\n", i, test.testName)
 
-		if (test.code == utils.EndpointRemoteAsset || test.code == utils.EndpointRedirect) &&
+		if test.code == utils.EndpointRemoteAsset &&
 			!utils.ExportedBaseExp.Match([]byte(test.testEndpoint)) &&
 			!utils.ExportedBaseExp.Match([]byte(test.testReferer)) {
 			t.Errorf(

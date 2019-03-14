@@ -192,6 +192,11 @@ func (ec *endpointComponents) getFolder() string {
 func (ec *endpointComponents) parseFrom(endpoint string, reg *regexp.Regexp) *endpointComponents {
 	match := reg.FindStringSubmatch(endpoint)
 
+	// `page` mark ec to folder
+	if path.Ext(endpoint) == "" && !strings.HasSuffix(endpoint, "/") {
+		ec.isFolder = true
+	}
+
 	for i, name := range reg.SubexpNames() {
 		switch name {
 		case "user":
@@ -217,13 +222,23 @@ func (ec *endpointComponents) parseFrom(endpoint string, reg *regexp.Regexp) *en
 			}
 		case "file":
 			ec.file = match[i]
+
+			// `path` -> `path/`
 			if path.Ext(ec.file) == "" {
-				ec.isFolder = true
-				ec.file += "/index.html"
-			} else if ec.file == "" {
-				ec.file = "/index.html"
-			} else if !strings.HasSuffix(ec.file, "/") {
+				// append slash
+				ec.file += "/"
+			}
+
+			// `favicon.ico` -> `/favicon.ico`
+			if !strings.HasPrefix(ec.file, "/") {
 				ec.file = "/" + ec.file
+			}
+
+			// `/` infers `index.html`
+			// `/page/` infers `/page/index.html`
+			// but not the `/page`
+			if !ec.isFolder && strings.HasSuffix(ec.file, "/") {
+				ec.file += "index.html"
 			}
 		}
 	}
@@ -234,12 +249,9 @@ func (ec *endpointComponents) parseFrom(endpoint string, reg *regexp.Regexp) *en
 func (ec *endpointComponents) Endpoint() (endpoint string) {
 	switch ec.endpointType {
 	case EndpointLocalAsset:
-		endpoint = "/" + ec.file
+		endpoint = ec.file
 	case EndpointRemoteAsset:
-		endpoint = fmt.Sprintf(
-			"/%s%s%s%s%s%s",
-			ec.user, ec.repo, ec.branch, ec.path, ec.folder, ec.file,
-		)
+		endpoint = fmt.Sprintf("/%s%s%s%s%s%s", ec.user, ec.repo, ec.branch, ec.path, ec.folder, ec.file)
 	case EndpointRedirect:
 		if ec.matchType == matchURLPattern {
 			endpoint = fmt.Sprintf("/%s%s%s%s%s::/%s%s", ec.user, ec.repo, ec.blob, ec.branch, ec.path, ec.folder, ec.file)
@@ -248,7 +260,16 @@ func (ec *endpointComponents) Endpoint() (endpoint string) {
 		}
 	}
 
-	return path.Clean(endpoint)
+	hasSlashSuffix := strings.HasSuffix(endpoint, "/")
+
+	endpoint = path.Clean(endpoint)
+
+	// path.Clean strips the slash suffix, if path is like `/path`(folder), we compensate back
+	if hasSlashSuffix {
+		endpoint += "/"
+	}
+
+	return endpoint
 }
 
 func (ec *endpointComponents) GetEndpointType() EndpointType {

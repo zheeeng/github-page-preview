@@ -43,7 +43,7 @@ func TestParse(t *testing.T) {
 	var panicLogDescr string
 	defer func() {
 		if r := recover(); r != nil {
-			fmt.Printf("\nTest [%d] has panic: %s\n", panicLogIndex, panicLogDescr)
+			t.Errorf("\n[%d] Test has panic: %s\tPanic is: `%v` ", panicLogIndex, panicLogDescr, r)
 		}
 	}()
 
