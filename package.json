@@ -1,0 +1,10 @@
+{
+  "name": "static-serve-for-hosting-github-examples",
+  "version": "1.0.0",
+  "repository": "https://github.com/zheeeng/github-page-preview.git",
+  "author": "hi@zheeeng.me",
+  "license": "MIT",
+  "devDependencies": {
+    "@polymer/polymer": "^3.1.0"
+  }
+}
