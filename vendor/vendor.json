@@ -1,6 +1,13 @@
 {
 	"comment": "",
 	"ignore": "test",
-	"package": [],
+	"package": [
+		{
+			"checksumSHA1": "vx7HpuRGkO8EU6yG+WpHVRqXUV4=",
+			"path": "github.com/golang-pkgs/functional-http-handler-funcs",
+			"revision": "9ebcd8ae7650f1db05c279aaba3a0a523a6d5eab",
+			"revisionTime": "2019-03-14T10:47:01Z"
+		}
+	],
 	"rootPath": "github.com/github-page-preview"
 }

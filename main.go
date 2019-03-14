@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/github-page-preview/fileserve"
-	"github.com/github-page-preview/utils"
+	fph "github.com/golang-pkgs/functional-http-handler-funcs"
 )
 
 var (
@@ -26,13 +26,13 @@ func init() {
 func main() {
 	fsv := fileserve.NewFileServe(staticFolder, remoteHost)
 
-	handler := utils.Compose(
-		utils.IfElse(
+	handler := fph.Compose(
+		fph.IfElse(
 			shouldCallMethodHandlerFunc,
-			utils.Err(methodHandlerFunc),
-			utils.Next(utils.EmptyHandlerFunc),
+			fph.Err(methodHandlerFunc),
+			fph.Next(fph.EmptyHandlerFunc),
 		),
-		utils.Complete(fsv.Start),
+		fph.Complete(fsv.Start),
 	)
 
 	http.HandleFunc("/", handler)
