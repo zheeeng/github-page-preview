@@ -6,9 +6,59 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Static Serving for Github</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/@webcomponents/webcomponentsjs/custom-elements-es5-adapter.js"></script>
+    <script src="https://unpkg.com/@webcomponents/webcomponentsjs/webcomponents-loader.js"></script>
+    <script type="module" src="./components/bonjour.js"></script>
+    <script type="module" src="./components/searcher.js"></script>
+    <script type="module" src="./components/input.js"></script>
+    <script type="module" src="./components/submit-button.js"></script>
+    <!-- <script type="module" src="./components/searcher.js"></script> -->
+    <style>
+        html, body {
+            width: 100%;
+            height: 100%;
+            color: white;
+            font-family: Lato, Helvetica, Arial, sans-serif;
+            font-size: 14px;
+        }
+        body {
+            background-color: #00B2CA;
+        }
+    </style>
 </head>
 <body>
-    <h1>Static Serving for Github<h1>
+    <!-- <vaadin-combo-box label="Element"></vaadin-combo-box> -->
+    <!-- <script type="module">
+    import 'https://unpkg.com/@vaadin/vaadin-combo-box/vaadin-combo-box.js?module'
+    customElements.whenDefined('vaadin-combo-box').then(function() {
+        document.querySelector('vaadin-combo-box').items = ['Hydrogen', 'Helium', 'Lithium'];
+    });
+    </script> -->
+    <!-- <h1>Polymer World</h1> -->
+    <i-bonjour>
+        <style>
+        header {
+            font-weight: lighter;
+            padding: 0;
+            margin: 1.5em 0 ;
+        }
+        h1 {
+            font-size: 3em;
+            margin: .5em;
+        }
+        small {
+            font-size: 1.2em;
+            opacity: .8;
+        }
+        </style>
+        <header slot="title">
+            <h1>Static Serving for Github</h1>
+            <small slot="sub-title">Serve, Share, Show, Ship your github folder on a static server!</small>
+        </header>
+        <i-searcher></i-searcher>
+    </i-bonjour>
+    <i-input></i-input>
+    <icon-toggle toggle-icon="star" pressed></icon-toggle>
 </body>
 </html>
 
