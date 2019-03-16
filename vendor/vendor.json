@@ -3,10 +3,10 @@
 	"ignore": "test",
 	"package": [
 		{
-			"checksumSHA1": "vx7HpuRGkO8EU6yG+WpHVRqXUV4=",
+			"checksumSHA1": "GBMlB+VwAyfS9UbfXjZTrLce7NI=",
 			"path": "github.com/golang-pkgs/functional-http-handler-funcs",
-			"revision": "9ebcd8ae7650f1db05c279aaba3a0a523a6d5eab",
-			"revisionTime": "2019-03-14T10:47:01Z"
+			"revision": "592f7bb61da0d06cc6df8084ec1c924fda37529f",
+			"revisionTime": "2019-03-16T01:20:38Z"
 		}
 	],
 	"rootPath": "github.com/github-page-preview"
